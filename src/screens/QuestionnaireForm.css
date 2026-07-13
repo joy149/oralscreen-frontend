@@ -1,0 +1,26 @@
+.questionnaire-form__subhead {
+  color: var(--color-ink-soft);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.questionnaire-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.questionnaire-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.questionnaire-form__actions .btn-primary {
+  flex: 1;
+}
+
+.questionnaire-form__toggles {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-bottom: var(--space-5);
+}

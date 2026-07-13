@@ -1,0 +1,28 @@
+.phone-entry {
+  justify-content: center;
+  gap: var(--space-6);
+}
+
+.phone-entry__intro {
+  text-align: center;
+}
+
+.phone-entry__intro p {
+  margin-top: var(--space-3);
+  color: var(--color-ink-soft);
+}
+
+.phone-entry__new-patient-note {
+  font-size: 0.875rem;
+  color: var(--color-ink-soft);
+  margin-bottom: var(--space-4);
+}
+
+.phone-entry__row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.phone-entry__row .field {
+  flex: 1;
+}

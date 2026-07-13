@@ -1,0 +1,174 @@
+.photo-upload__subhead {
+  color: var(--color-ink-soft);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.photo-upload__hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.photo-upload__pickers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.photo-upload__picker {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 2px dashed var(--color-line-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.photo-upload__camera {
+  margin-top: var(--space-4);
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: #111;
+}
+
+.photo-upload__camera-preview {
+  display: block;
+  width: 100%;
+  max-height: 55vh;
+  object-fit: cover;
+}
+
+.photo-upload__camera-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-paper-raised);
+}
+
+.photo-upload__camera-fallback {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+@media (max-width: 360px) {
+  .photo-upload__pickers {
+    grid-template-columns: 1fr;
+  }
+}
+
+.photo-upload__picker:hover {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+.photo-upload__picker-icon {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.photo-upload__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.photo-upload__hint {
+  margin-top: var(--space-3);
+  font-size: 0.8125rem;
+  color: var(--color-error);
+}
+
+.photo-upload__continue {
+  margin-top: auto;
+  padding-top: var(--space-6);
+}
+
+.photo-upload__back {
+  margin-top: var(--space-3);
+}
+
+.assessment-loading {
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.assessment-loading__indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 28px;
+  margin-bottom: var(--space-2);
+}
+
+.assessment-loading__indicator span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  animation: assessment-loading-pulse 1.4s ease-in-out infinite;
+}
+
+.assessment-loading__indicator span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.assessment-loading__indicator span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+.assessment-loading__eyebrow {
+  padding: var(--space-2) var(--space-3);
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.assessment-loading__status {
+  min-height: 1.5em;
+  color: var(--color-ink-soft);
+  font-weight: 600;
+}
+
+.assessment-loading__note {
+  max-width: 320px;
+  color: var(--color-ink-faint);
+  font-size: 0.875rem;
+}
+
+@keyframes assessment-loading-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

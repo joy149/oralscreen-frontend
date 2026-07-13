@@ -1,0 +1,113 @@
+.risk-gauge {
+  width: 100%;
+}
+
+.risk-gauge__track {
+  position: relative;
+  display: flex;
+  height: 12px;
+  border-radius: 999px;
+  overflow: visible;
+  gap: 3px;
+}
+
+.risk-gauge__zone {
+  flex: 1;
+  border-radius: 999px;
+  background: var(--color-line);
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.risk-gauge__zone--no_mild_risk.is-active {
+  background: var(--color-risk-mild);
+  opacity: 1;
+}
+
+.risk-gauge__zone--moderate_risk.is-active {
+  background: var(--color-risk-moderate);
+  opacity: 1;
+}
+
+.risk-gauge__zone--high_risk.is-active {
+  background: var(--color-risk-high);
+  opacity: 1;
+}
+
+.risk-gauge__marker {
+  position: absolute;
+  top: -5px;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  border-radius: 50%;
+  background: var(--color-paper-raised);
+  border: 3px solid var(--color-ink);
+  box-shadow: var(--shadow-card);
+}
+
+.risk-gauge__labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+  font-size: 0.75rem;
+  color: var(--color-ink-faint);
+}
+
+.risk-gauge__labels span {
+  flex: 1;
+  text-align: center;
+}
+
+.risk-gauge__labels span:first-child {
+  text-align: left;
+}
+
+.risk-gauge__labels span:last-child {
+  text-align: right;
+}
+
+.risk-gauge__labels span.is-active {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.risk-gauge__result {
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.risk-gauge__result h2 {
+  margin-bottom: var(--space-2);
+}
+
+.risk-gauge__result p {
+  color: var(--color-ink-soft);
+}
+
+.risk-gauge__result--no_mild_risk {
+  background: var(--color-risk-mild-soft);
+}
+.risk-gauge__result--no_mild_risk h2 {
+  color: var(--color-risk-mild);
+}
+
+.risk-gauge__result--moderate_risk {
+  background: var(--color-risk-moderate-soft);
+}
+.risk-gauge__result--moderate_risk h2 {
+  color: var(--color-risk-moderate);
+}
+
+.risk-gauge__result--high_risk {
+  background: var(--color-risk-high-soft);
+}
+.risk-gauge__result--high_risk h2 {
+  color: var(--color-risk-high);
+}
+
+.risk-gauge--small .risk-gauge__result {
+  display: none;
+}

@@ -1,0 +1,40 @@
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-7) var(--space-4);
+  text-align: center;
+  flex: 1;
+}
+
+.error-state__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-error-soft);
+  color: var(--color-error);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.error-state h3 {
+  color: var(--color-ink);
+}
+
+.error-state p {
+  color: var(--color-ink-soft);
+  max-width: 32ch;
+}
+
+.error-state .btn {
+  width: auto;
+  margin-top: var(--space-2);
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+}

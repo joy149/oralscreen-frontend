@@ -1,0 +1,45 @@
+.assessment-result__subhead {
+  color: var(--color-ink-soft);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.assessment-result__card {
+  margin-bottom: var(--space-4);
+}
+
+.assessment-result__summary {
+  margin-bottom: var(--space-4);
+}
+
+.assessment-result__summary h3 {
+  margin-bottom: var(--space-2);
+}
+
+.assessment-result__summary p {
+  color: var(--color-ink-soft);
+}
+
+.assessment-result__specialist h3 {
+  margin-bottom: var(--space-2);
+}
+
+.assessment-result__specialist p {
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.assessment-result__disclaimer {
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  border-left: 3px solid var(--color-line-strong);
+}
+
+.assessment-result__disclaimer p {
+  font-size: 0.8125rem;
+  color: var(--color-ink-faint);
+}
+
+.assessment-result__done {
+  margin-top: var(--space-6);
+}

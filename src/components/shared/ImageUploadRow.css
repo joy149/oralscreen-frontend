@@ -1,0 +1,107 @@
+.upload-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-raised);
+}
+
+.upload-row--failed {
+  border-color: var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.upload-row__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--color-line);
+}
+
+.upload-row__thumb--placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--color-ink-faint);
+  font-size: 1.5rem;
+}
+
+.upload-row__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-row__name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upload-row__uploading {
+  margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--color-ink-faint);
+}
+
+.upload-row__spinner {
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid var(--color-primary-soft);
+  border-top-color: var(--color-primary);
+  border-radius: 999px;
+  animation: upload-row-spin 0.75s linear infinite;
+}
+
+@keyframes upload-row-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.upload-row__status-text {
+  margin-top: var(--space-1);
+  font-size: 0.8125rem;
+  color: var(--color-ink-faint);
+}
+
+.upload-row__status-text--success {
+  color: var(--color-success);
+}
+
+.upload-row__status-text--error {
+  color: var(--color-error);
+}
+
+.upload-row__actions {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.upload-row__icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper-raised);
+  color: var(--color-ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9375rem;
+  line-height: 1;
+}
+
+.upload-row__icon-btn:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
