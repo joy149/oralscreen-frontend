@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function resolveApiUrl(url) {
   if (!url || /^https?:\/\//i.test(url)) return url || null;
