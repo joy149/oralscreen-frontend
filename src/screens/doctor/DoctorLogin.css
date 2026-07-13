@@ -1,0 +1,111 @@
+.doctor-login {
+  min-height: 100dvh;
+  background: #f5f7f6;
+}
+
+.doctor-login__brand {
+  height: 64px;
+  padding: 0 var(--space-6);
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-paper-raised);
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.doctor-login__brand span {
+  margin-left: var(--space-2);
+  color: var(--color-ink-faint);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.doctor-login__main {
+  width: min(430px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 10vh 0 var(--space-7);
+}
+
+.doctor-login__intro { margin-bottom: var(--space-6); }
+.doctor-login__intro > p {
+  margin-bottom: var(--space-2);
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.doctor-login__intro h1 { font-size: 1.8rem; }
+.doctor-login__intro > span {
+  display: block;
+  margin-top: var(--space-3);
+  color: var(--color-ink-soft);
+}
+
+.doctor-login__panel {
+  padding: var(--space-6);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-paper-raised);
+  box-shadow: var(--shadow-card);
+}
+
+.doctor-login__panel .field:last-of-type { margin-bottom: var(--space-5); }
+.doctor-login__error {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  border-left: 3px solid var(--color-error);
+  background: var(--color-error-soft);
+  color: #7e302a;
+  font-size: 0.875rem;
+}
+
+.doctor-login__back {
+  display: block;
+  margin: var(--space-3) auto 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.doctor-login__confirmation { text-align: center; }
+.doctor-login__confirmation > span {
+  display: block;
+  color: var(--color-success);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.doctor-login__confirmation strong {
+  display: block;
+  margin: var(--space-2) 0 var(--space-5);
+  font-size: 1.2rem;
+}
+
+.doctor-login__pending { text-align: center; }
+.doctor-login__pending-icon {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+  border-radius: 50%;
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-weight: 800;
+}
+.doctor-login__pending p {
+  margin-bottom: var(--space-5);
+  color: var(--color-ink-soft);
+}
+
+@media (max-width: 520px) {
+  .doctor-login__brand { height: 56px; padding: 0 var(--space-4); }
+  .doctor-login__main { padding-top: var(--space-7); }
+  .doctor-login__panel { padding: var(--space-5); }
+}

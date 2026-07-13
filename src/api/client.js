@@ -68,6 +68,38 @@ async function request(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+function doctorRequest(path, token, options = {}) {
+  return request(path, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+async function doctorBlobRequest(path, token) {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    let body = null;
+    try {
+      body = await res.json();
+    } catch (_) {
+      // Binary endpoints may return an empty or plain-text error body.
+    }
+    throw new ApiError(
+      errorMessage(body, `Request failed with status ${res.status}`),
+      res.status,
+      body
+    );
+  }
+
+  return res.blob();
+}
+
 /**
  * Uploads a single file with progress callbacks, via XHR (fetch has no
  * upload-progress event). Returns a promise resolving to the parsed JSON
@@ -166,6 +198,38 @@ export const api = {
     request(`/api/questionnaires/${questionnaireId}/assess`, { method: 'POST' }),
 
   getAssessment: (id) => request(`/api/assessments/${id}`),
+
+  checkDoctor: (phoneNumber) =>
+    request('/api/doctor/auth/check', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber }),
+    }),
+
+  registerDoctor: (data) =>
+    request('/api/doctor/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  loginDoctor: (phoneNumber) =>
+    request('/api/doctor/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber }),
+    }),
+
+  getDoctorQueue: (token) => doctorRequest('/api/doctor/queue', token),
+
+  getDoctorAssessment: (id, token) =>
+    doctorRequest(`/api/assessments/${id}`, token),
+
+  getDoctorImageBlob: (imageId, token) =>
+    doctorBlobRequest(`/api/images/${imageId}/content`, token),
+
+  submitDoctorReview: (id, data, token) =>
+    doctorRequest(`/api/doctor/assessments/${id}/review`, token, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   resolveApiUrl,
 };
