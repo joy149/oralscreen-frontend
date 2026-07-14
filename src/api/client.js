@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://dev-oralscreen.ap-south-1.elasticbeanstalk.com';
 
 function resolveApiUrl(url) {
   if (!url || /^https?:\/\//i.test(url)) return url || null;
