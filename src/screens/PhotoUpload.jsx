@@ -366,7 +366,12 @@ export default function PhotoUpload() {
         </div>
 
         {cameraStream && (
-          <div className="photo-upload__camera" role="dialog" aria-label="Camera">
+          <div
+            className="photo-upload__camera"
+            role="dialog"
+            aria-label="Camera"
+            style={{ position: 'relative' }}
+          >
             <video ref={videoRef} className="photo-upload__camera-preview" autoPlay playsInline muted />
             {hasMultipleCameras && (
               <button
@@ -375,8 +380,45 @@ export default function PhotoUpload() {
                 onClick={switchCamera}
                 disabled={switchingCamera}
                 aria-label="Switch camera"
+                title="Switch camera"
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  width: '40px',
+                  height: '40px',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(0, 0, 0, 0.45)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  color: '#fff',
+                  cursor: switchingCamera ? 'default' : 'pointer',
+                  opacity: switchingCamera ? 0.6 : 1,
+                  zIndex: 2,
+                }}
               >
-                {switchingCamera ? '…' : '🔄 Switch camera'}
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{
+                    transform: switchingCamera ? 'rotate(180deg)' : 'none',
+                    transition: 'transform 0.2s ease',
+                  }}
+                >
+                  <path d="M17 2.1l4 4-4 4" />
+                  <path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8" />
+                  <path d="M7 21.9l-4-4 4-4" />
+                  <path d="M21 11.8v2a4 4 0 0 1-4 4H4.2" />
+                </svg>
               </button>
             )}
             <div className="photo-upload__camera-actions">
