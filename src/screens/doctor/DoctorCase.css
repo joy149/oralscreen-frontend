@@ -188,6 +188,28 @@
   font-weight: 700;
 }
 
+.doctor-case__clinical-reasoning {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+.doctor-case__reasoning-toggle {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--color-primary-dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.doctor-case__clinical-reasoning-text {
+  margin-top: var(--space-3);
+  color: var(--color-ink-faint);
+  font-size: 0.85rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
 .doctor-case__panel--review { border-color: #bad2ce; }
 .doctor-case__form { max-width: 720px; padding: var(--space-5); }
 .doctor-case__form textarea { min-height: 130px; }
