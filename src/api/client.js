@@ -41,11 +41,18 @@ function errorMessage(body, fallback) {
 
 async function request(path, options = {}) {
   const isFormData = options.body instanceof FormData;
+  const mandatoryHeaders = {
+    'ngrok-skip-browser-warning': '69420',
+  };
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: isFormData
-      ? options.headers
-      : { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      ? { ...mandatoryHeaders, ...options.headers }
+      : { 
+          'Content-Type': 'application/json', 
+          ...mandatoryHeaders, 
+          ...(options.headers || {}) 
+        },
   });
 
   if (!res.ok) {
@@ -80,7 +87,10 @@ function doctorRequest(path, token, options = {}) {
 
 async function doctorBlobRequest(path, token) {
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { 
+      Authorization: `Bearer ${token}`,
+      'ngrok-skip-browser-warning': '69420' 
+    },
   });
 
   if (!res.ok) {
@@ -110,8 +120,6 @@ function uploadImage(questionnaireId, file, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
-    // The endpoint accepts exactly one image per request. Do not change this
-    // to `files`: that is the old batch-upload contract.
     formData.append('file', file);
 
     xhr.upload.addEventListener('progress', (event) => {
@@ -149,6 +157,10 @@ function uploadImage(questionnaireId, file, onProgress) {
     });
 
     xhr.open('POST', `${BASE_URL}/api/questionnaires/${questionnaireId}/images`);
+    
+    // Add the ngrok header here, AFTER open() and BEFORE send()
+    xhr.setRequestHeader('ngrok-skip-browser-warning', '69420');
+    
     xhr.send(formData);
   });
 }
