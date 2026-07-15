@@ -2,21 +2,101 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
 .doctor-queue__heading p {
   margin-bottom: var(--space-1);
   color: var(--color-primary);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .doctor-queue__heading h1 { font-size: 1.7rem; }
 .doctor-queue__heading > span {
   color: var(--color-ink-faint);
   font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
 }
+
+/* ---------- Toolbar: risk + status filters ---------- */
+
+.doctor-queue__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.doctor-queue__filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.doctor-queue__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  background: var(--color-paper-raised);
+  color: var(--color-ink-soft);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.doctor-queue__pill:hover { border-color: var(--color-primary); color: var(--color-ink); }
+.doctor-queue__pill.is-active {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-paper-raised));
+  color: var(--color-primary);
+}
+
+.doctor-queue__pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-line);
+}
+.doctor-queue__pill-dot--HIGH_RISK { background: #C1503F; }
+.doctor-queue__pill-dot--MODERATE_RISK { background: #C98A2E; }
+.doctor-queue__pill-dot--NO_MILD_RISK { background: #5C8F6E; }
+
+.doctor-queue__pill-count {
+  padding: 0 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.05);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.doctor-queue__pill.is-active .doctor-queue__pill-count {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.doctor-queue__clear {
+  margin-left: auto;
+  padding: 5px 4px;
+  border: 0;
+  background: none;
+  color: var(--color-ink-faint);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.doctor-queue__clear:hover { color: var(--color-ink); }
+
+/* ---------- Table ---------- */
 
 .doctor-queue__table {
   overflow: hidden;
@@ -27,27 +107,64 @@
 
 .doctor-queue__row {
   display: grid;
-  grid-template-columns: minmax(190px, 1.5fr) minmax(100px, 0.75fr) minmax(130px, 0.9fr) minmax(130px, 0.85fr) 24px;
+  /* 4px track reserved for the risk-edge indicator */
+  grid-template-columns: 4px minmax(190px, 1.6fr) minmax(96px, 0.7fr) minmax(120px, 0.8fr) minmax(140px, 0.85fr) 24px;
   gap: var(--space-4);
   align-items: center;
   width: 100%;
-  min-height: 72px;
+  min-height: 64px;
   padding: var(--space-3) var(--space-5);
+  padding-left: 0;
   border: 0;
   border-bottom: 1px solid var(--color-line);
   text-align: left;
 }
 
 .doctor-queue__row--header {
-  min-height: 42px;
+  min-height: 38px;
   background: #f8faf9;
   color: var(--color-ink-faint);
-  font-size: 0.72rem;
+}
+.doctor-queue__row--header > span:first-child { grid-column: 2; } /* skip the edge track */
+.doctor-queue__row--header [role='columnheader'] {
+  font-size: 0.68rem;
   font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.doctor-queue__row--header > span:not([role='columnheader']):not(.doctor-queue__col--submitted):not(.doctor-queue__col--risk) {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
+.doctor-queue__sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.doctor-queue__sort-btn:hover { color: var(--color-ink); }
+.doctor-queue__sort-btn.is-active { color: var(--color-primary); }
+.doctor-queue__sort-icon {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+.doctor-queue__sort-btn.is-active .doctor-queue__sort-icon { opacity: 1; }
+
+.doctor-queue__col--submitted { justify-self: end; text-align: right; }
+.doctor-queue__col--risk { justify-self: center; text-align: center; }
+
 .doctor-queue__row--case {
+  position: relative;
   background: var(--color-paper-raised);
   color: var(--color-ink-soft);
   font-size: 0.875rem;
@@ -55,7 +172,25 @@
 }
 .doctor-queue__row--case:last-child { border-bottom: 0; }
 .doctor-queue__row--case:hover { background: #f6faf9; }
+.doctor-queue__row--case:hover .doctor-queue__arrow { color: var(--color-primary); }
 
+/* Risk-edge indicator — lets a doctor triage by color down the left rail
+   before reading any text. Driven by the same aiRiskClassification value
+   RiskTier consumes for the badge. */
+.doctor-queue__row--case::before {
+  content: '';
+  grid-row: 1;
+  grid-column: 1;
+  align-self: stretch;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--color-line);
+}
+.doctor-queue__row--case[data-risk='HIGH_RISK']::before { background: #C1503F; }
+.doctor-queue__row--case[data-risk='MODERATE_RISK']::before { background: #C98A2E; }
+.doctor-queue__row--case[data-risk='NO_MILD_RISK']::before { background: #5C8F6E; }
+
+.doctor-queue__patient { grid-column: 2; }
 .doctor-queue__patient strong,
 .doctor-queue__patient small { display: block; }
 .doctor-queue__patient strong { color: var(--color-ink); font-size: 0.95rem; }
@@ -66,11 +201,34 @@
   text-transform: capitalize;
 }
 
+/* Status is a workflow state, not a clinical finding — kept neutral so it
+   never visually competes with the amber "Moderate" risk badge in the
+   adjacent column. */
 .doctor-queue__row .is-reviewed,
-.doctor-queue__row .is-awaiting { font-weight: 600; }
-.doctor-queue__row .is-reviewed { color: var(--color-success); }
-.doctor-queue__row .is-awaiting { color: #956617; }
-.doctor-queue__arrow { color: var(--color-ink-faint); font-size: 1.5rem; }
+.doctor-queue__row .is-awaiting {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+.doctor-queue__row .is-reviewed { color: var(--color-ink-soft); }
+.doctor-queue__row .is-awaiting { color: var(--color-ink); }
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.is-reviewed .status-dot { background: var(--color-success); }
+.is-awaiting .status-dot { background: #C98A2E; }
+
+.doctor-queue__arrow {
+  color: var(--color-ink-faint);
+  font-size: 1.5rem;
+  transition: color 0.15s ease;
+}
 
 .doctor-queue__empty,
 .doctor-queue__state {
@@ -82,20 +240,39 @@
 }
 .doctor-queue__empty h2 { font-size: 1.25rem; }
 .doctor-queue__empty p { margin-top: var(--space-2); color: var(--color-ink-soft); }
+.doctor-queue__empty .doctor-queue__clear {
+  display: inline-block;
+  margin: var(--space-3) 0 0;
+}
 
 @media (max-width: 760px) {
+  .doctor-queue__toolbar { padding-bottom: var(--space-3); }
+  .doctor-queue__clear { margin-left: 0; width: 100%; text-align: left; }
+
   .doctor-queue__row--header { display: none; }
   .doctor-queue__table { border: 0; background: transparent; overflow: visible; }
   .doctor-queue__row--case {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 4px 1fr auto;
     min-height: 0;
     margin-bottom: var(--space-3);
     padding: var(--space-4);
+    padding-left: var(--space-3);
     border: 1px solid var(--color-line);
     border-radius: var(--radius-sm);
   }
-  .doctor-queue__row--case > span:nth-child(2) { grid-column: 2; grid-row: 1; align-self: start; }
-  .doctor-queue__row--case > span:nth-child(3) { grid-column: 1; grid-row: 2; }
-  .doctor-queue__row--case > span:nth-child(4) { grid-column: 1 / -1; grid-row: 3; }
-  .doctor-queue__arrow { grid-column: 2; grid-row: 2 / 4; align-self: center; }
+  .doctor-queue__row--case::before {
+    border-radius: 2px 0 0 2px;
+    margin-left: calc(var(--space-3) * -1);
+  }
+  .doctor-queue__patient { grid-column: 2; grid-row: 1; }
+  .doctor-queue__col--submitted {
+    grid-column: 2; grid-row: 2;
+    justify-self: start; text-align: left;
+  }
+  .doctor-queue__col--risk {
+    grid-column: 2; grid-row: 3;
+    justify-self: start; text-align: left;
+  }
+  .doctor-queue__row--case > span:nth-child(5) { grid-column: 2; grid-row: 4; }
+  .doctor-queue__arrow { grid-column: 3; grid-row: 1 / -1; align-self: center; }
 }
