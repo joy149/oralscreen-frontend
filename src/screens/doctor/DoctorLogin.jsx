@@ -12,11 +12,13 @@ export default function DoctorLogin() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [name, setName] = useState('');
   const [registrationId, setRegistrationId] = useState('');
+  const [approvedDoctor, setApprovedDoctor] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const phoneValid = /^\d{10}$/.test(phoneNumber);
   const registrationValid = phoneValid && name.trim() && registrationId.trim();
+  const greetingName = name.trim().replace(/^dr\.?\s+/i, '');
 
   useEffect(() => {
     if (session) navigate('/doctor', { replace: true });
@@ -24,6 +26,8 @@ export default function DoctorLogin() {
 
   function resetToPhone(message = '') {
     setStep('phone');
+    setName('');
+    setApprovedDoctor(null);
     setError(message);
   }
 
@@ -36,7 +40,15 @@ export default function DoctorLogin() {
       const result = await api.checkDoctor(phoneNumber);
       if (!result.exists) setStep('register');
       else if (!result.active) setStep('pending');
-      else setStep('login');
+      else {
+        if (!result.doctorId) throw new Error('Approved doctor response did not include doctorId');
+        const response = await api.getDoctor(result.doctorId);
+        const doctor = response?.doctor || response?.data || response;
+        const doctorName = doctor?.name || doctor?.fullName || '';
+        setApprovedDoctor({ ...doctor, id: doctor?.id || result.doctorId, name: doctorName });
+        setName(doctorName);
+        setStep('login');
+      }
     } catch (_) {
       setError('We could not check this number. Please try again.');
     } finally {
@@ -72,7 +84,11 @@ export default function DoctorLogin() {
     setError('');
     try {
       const result = await api.loginDoctor(phoneNumber);
-      const nextSession = createDoctorSession(result);
+      const nextSession = createDoctorSession({
+        ...result,
+        doctorId: approvedDoctor?.id,
+        name: approvedDoctor?.name,
+      });
       if (!nextSession.token) throw new Error('Login response did not include a token');
       setSession(nextSession);
       navigate(location.state?.from || '/doctor', { replace: true });
@@ -144,12 +160,13 @@ export default function DoctorLogin() {
 
           {step === 'login' && (
             <div className="doctor-login__confirmation">
-              <span>Approved account</span>
-              <strong>{phoneNumber}</strong>
+              <span className="doctor-login__approved-icon" aria-hidden="true">&#10003;</span>
+              <h2>{greetingName ? `Hi Dr. ${greetingName}` : 'Your account is approved'}</h2>
+              <p>Your account is approved. You can proceed to the screening queue.</p>
               <button className="btn btn-primary" type="button" onClick={login} disabled={submitting}>
                 {submitting ? 'Signing in...' : 'Continue to queue'}
               </button>
-              <button className="doctor-login__back" type="button" onClick={() => resetToPhone()}>Use another number</button>
+              <button className="doctor-login__back" type="button" onClick={() => resetToPhone()}>Log in as another doctor</button>
             </div>
           )}
 

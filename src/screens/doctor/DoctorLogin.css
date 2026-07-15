@@ -73,17 +73,25 @@
 }
 
 .doctor-login__confirmation { text-align: center; }
-.doctor-login__confirmation > span {
-  display: block;
+.doctor-login__approved-icon {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+  border-radius: 50%;
+  background: var(--color-success-soft);
   color: var(--color-success);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: 800;
 }
-.doctor-login__confirmation strong {
-  display: block;
+.doctor-login__confirmation h2 {
+  font-size: 1.4rem;
+}
+.doctor-login__confirmation p {
   margin: var(--space-2) 0 var(--space-5);
-  font-size: 1.2rem;
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
 }
 
 .doctor-login__pending { text-align: center; }

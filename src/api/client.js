@@ -217,6 +217,8 @@ export const api = {
       body: JSON.stringify({ phoneNumber }),
     }),
 
+  getDoctor: (doctorId) => request(`/api/doctors/${doctorId}`),
+
   registerDoctor: (data) =>
     request('/api/doctor/auth/register', {
       method: 'POST',
