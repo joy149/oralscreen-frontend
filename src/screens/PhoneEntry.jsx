@@ -102,6 +102,15 @@ export default function PhoneEntry() {
   return (
     <AppShell>
       <div className="screen phone-entry">
+        <div className="phone-entry__role-switch" aria-label="Choose login type">
+          <button type="button" className="is-active" aria-pressed="true">
+            Patient
+          </button>
+          <button type="button" aria-pressed="false" onClick={() => navigate('/doctor/login')}>
+            Doctor
+          </button>
+        </div>
+
         <div className="phone-entry__intro">
           <h1>Let's take a look</h1>
           <p>Answer a few questions and share a photo. A dentist reviews every result.</p>

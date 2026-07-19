@@ -18,6 +18,18 @@
   gap: var(--space-3);
 }
 
+.photo-upload__camera-switch {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
 .photo-upload__picker {
   appearance: none;
   width: 100%;

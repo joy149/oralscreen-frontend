@@ -63,6 +63,9 @@ export default function PhotoUpload() {
   const [assessing, setAssessing] = useState(false);
   const [cameraStream, setCameraStream] = useState(null);
   const [cameraError, setCameraError] = useState(null);
+  const [facingMode, setFacingMode] = useState('environment');
+  const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+  const [switchingCamera, setSwitchingCamera] = useState(false);
 
   const startUpload = useCallback((item) => {
     activeUploadsRef.current += 1;
@@ -199,7 +202,26 @@ export default function PhotoUpload() {
     };
   }, [cameraStream]);
 
-  async function openCamera() {
+  // Once we have camera permission, check whether the device actually has
+  // more than one camera before showing a flip control that would do nothing.
+  useEffect(() => {
+    if (!cameraStream || !navigator.mediaDevices?.enumerateDevices) return;
+
+    navigator.mediaDevices
+      .enumerateDevices()
+      .then((devices) => {
+        const videoInputs = devices.filter((d) => d.kind === 'videoinput');
+        if (mountedRef.current) {
+          setHasMultipleCameras(videoInputs.length > 1);
+        }
+      })
+      .catch(() => {
+        // If enumeration fails, just leave the flip control hidden rather
+        // than risk offering a switch that won't work.
+      });
+  }, [cameraStream]);
+
+  async function openCamera(mode = facingMode) {
     setCameraError(null);
     if (!navigator.mediaDevices?.getUserMedia) {
       cameraInputRef.current?.click();
@@ -208,17 +230,31 @@ export default function PhotoUpload() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
+        video: { facingMode: { ideal: mode } },
         audio: false,
       });
+      setFacingMode(mode);
       setCameraStream(stream);
     } catch (err) {
       setCameraError('Camera access was unavailable. You can use your device camera instead.');
     }
   }
 
+  async function switchCamera() {
+    if (switchingCamera) return;
+    const nextMode = facingMode === 'environment' ? 'user' : 'environment';
+    setSwitchingCamera(true);
+    setCameraError(null);
+    try {
+      await openCamera(nextMode);
+    } finally {
+      setSwitchingCamera(false);
+    }
+  }
+
   function closeCamera() {
     setCameraStream(null);
+    setFacingMode('environment');
   }
 
   function capturePhoto() {
@@ -319,7 +355,7 @@ export default function PhotoUpload() {
         />
 
         <div className="photo-upload__pickers">
-          <button type="button" className="photo-upload__picker" onClick={openCamera}>
+          <button type="button" className="photo-upload__picker" onClick={() => openCamera('environment')}>
             <span className="photo-upload__picker-icon">+</span>
             <span>Take a photo</span>
           </button>
@@ -330,8 +366,61 @@ export default function PhotoUpload() {
         </div>
 
         {cameraStream && (
-          <div className="photo-upload__camera" role="dialog" aria-label="Camera">
+          <div
+            className="photo-upload__camera"
+            role="dialog"
+            aria-label="Camera"
+            style={{ position: 'relative' }}
+          >
             <video ref={videoRef} className="photo-upload__camera-preview" autoPlay playsInline muted />
+            {hasMultipleCameras && (
+              <button
+                type="button"
+                className="photo-upload__camera-switch"
+                onClick={switchCamera}
+                disabled={switchingCamera}
+                aria-label="Switch camera"
+                title="Switch camera"
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  width: '40px',
+                  height: '40px',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(0, 0, 0, 0.45)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  color: '#fff',
+                  cursor: switchingCamera ? 'default' : 'pointer',
+                  opacity: switchingCamera ? 0.6 : 1,
+                  zIndex: 2,
+                }}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{
+                    transform: switchingCamera ? 'rotate(180deg)' : 'none',
+                    transition: 'transform 0.2s ease',
+                  }}
+                >
+                  <path d="M17 2.1l4 4-4 4" />
+                  <path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8" />
+                  <path d="M7 21.9l-4-4 4-4" />
+                  <path d="M21 11.8v2a4 4 0 0 1-4 4H4.2" />
+                </svg>
+              </button>
+            )}
             <div className="photo-upload__camera-actions">
               <button type="button" className="btn btn-secondary" onClick={closeCamera}>Cancel</button>
               <button type="button" className="btn btn-primary" onClick={capturePhoto}>Use this photo</button>
