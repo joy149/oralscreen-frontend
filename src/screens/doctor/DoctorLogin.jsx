@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../../api/client';
 import { createDoctorSession, useDoctorSession } from '../../context/DoctorSessionContext';
+import oralscreenLogo from '../../assets/oralscreen_icon.jpg';
 import './DoctorLogin.css';
 
 export default function DoctorLogin() {
@@ -105,7 +106,10 @@ export default function DoctorLogin() {
 
   return (
     <div className="doctor-login">
-      <header className="doctor-login__brand">OralScreen <span>Clinical</span></header>
+      <header className="doctor-login__brand">
+        <img src={oralscreenLogo} alt="" className="doctor-login__logo" />
+        OralScreen <span>Clinical</span>
+      </header>
       <main className="doctor-login__main">
         <div className="doctor-login__intro">
           <p>Doctor access</p>

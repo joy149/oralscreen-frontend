@@ -1,3 +1,4 @@
+import oralscreenLogo from '../../assets/oralscreen_icon.jpg';
 import './AppShell.css';
 
 const DOCTOR_NAME = import.meta.env.VITE_DOCTOR_NAME || 'Dr. [Name]';
@@ -7,7 +8,10 @@ export default function AppShell({ children, step, totalSteps }) {
   return (
     <div className="app-shell">
       <header className="app-shell__header">
-        <div className="app-shell__brand">OralScreen</div>
+        <div className="app-shell__brand">
+          <img src={oralscreenLogo} alt="" className="app-shell__logo" />
+          <span>OralScreen</span>
+        </div>
         {step && totalSteps && (
           <div className="app-shell__progress" aria-label={`Step ${step} of ${totalSteps}`}>
             {Array.from({ length: totalSteps }).map((_, i) => (
