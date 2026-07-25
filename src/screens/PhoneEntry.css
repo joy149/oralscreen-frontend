@@ -22,11 +22,21 @@
   color: var(--color-ink-soft);
   font-size: 0.875rem;
   font-weight: 600;
+  position: relative;
+  z-index: 1;
 }
 
 .phone-entry__role-switch button.is-active {
-  background: var(--color-primary);
+  background: transparent;
   color: #ffffff;
+}
+
+.phone-entry__role-indicator {
+  position: absolute;
+  inset: 0;
+  background: var(--color-primary);
+  border-radius: 4px;
+  z-index: -1;
 }
 
 .phone-entry__role-switch button:not(.is-active):hover {

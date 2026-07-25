@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import oralscreenLogo from '../../assets/oralscreen_icon.jpg';
 import './AppShell.css';
 
@@ -14,6 +15,14 @@ export default function AppShell({ children, step, totalSteps }) {
         </div>
         {step && totalSteps && (
           <div className="app-shell__progress" aria-label={`Step ${step} of ${totalSteps}`}>
+            <div className="app-shell__progress-track">
+              <motion.div
+                className="app-shell__progress-fill"
+                initial={false}
+                animate={{ width: `${((step - 1) / (totalSteps - 1)) * 100}%` }}
+                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              />
+            </div>
             {Array.from({ length: totalSteps }).map((_, i) => (
               <span
                 key={i}
@@ -34,3 +43,4 @@ export default function AppShell({ children, step, totalSteps }) {
     </div>
   );
 }
+

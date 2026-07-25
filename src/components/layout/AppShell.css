@@ -35,7 +35,26 @@
 
 .app-shell__progress {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 0;
+  position: relative;
+  width: 80px;
+}
+
+.app-shell__progress-track {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  height: 2px;
+  background: var(--color-line-strong);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.app-shell__progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 1px;
 }
 
 .app-shell__progress-dot {
@@ -43,6 +62,19 @@
   height: 8px;
   border-radius: 50%;
   background: var(--color-line-strong);
+  position: relative;
+  z-index: 1;
+  transition: background-color var(--duration-normal) var(--ease-smooth),
+    box-shadow var(--duration-normal) var(--ease-smooth);
+  flex: 1;
+}
+
+.app-shell__progress-dot:first-child {
+  flex: 0 0 8px;
+}
+
+.app-shell__progress-dot:last-child {
+  flex: 0 0 8px;
 }
 
 .app-shell__progress-dot.is-complete {
