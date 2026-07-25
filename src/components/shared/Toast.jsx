@@ -57,9 +57,9 @@ export function ToastProvider({ children }) {
               key={t.id}
               className={`toast toast--${t.variant}`}
               role="status"
-              initial={{ opacity: 0, y: 12, scale: 0.96 }}
+              initial={{ opacity: 0, y: -12, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              exit={{ opacity: 0, y: -12, scale: 0.96 }}
               transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             >
               <span className="toast__icon" aria-hidden="true">
