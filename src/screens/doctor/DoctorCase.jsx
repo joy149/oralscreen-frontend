@@ -4,7 +4,9 @@ import { ApiError, api } from '../../api/client';
 import DoctorShell from '../../components/doctor/DoctorShell';
 import RiskTier from '../../components/doctor/RiskTier';
 import ErrorState from '../../components/shared/ErrorState';
-import LoadingState from '../../components/shared/LoadingState';
+import { CaseSkeleton } from '../../components/shared/Skeleton';
+import { useToast } from '../../components/shared/Toast';
+import PageTransition from '../../components/shared/PageTransition';
 import { useDoctorSession } from '../../context/DoctorSessionContext';
 import './DoctorCase.css';
 
@@ -99,6 +101,7 @@ export default function DoctorCase() {
   const location = useLocation();
   const navigate = useNavigate();
   const { session, endSession } = useDoctorSession();
+  const toast = useToast();
   const queueAssessment = location.state?.assessment || null;
   const [assessment, setAssessment] = useState(queueAssessment);
   const [risk, setRisk] = useState('');
@@ -166,8 +169,12 @@ export default function DoctorCase() {
       }, session.token));
       setAssessment((current) => ({ ...current, ...result, doctorRiskClassification: risk, doctorNotes: notes.trim() }));
       setSaved(true);
+      toast.success('Review saved successfully');
     } catch (err) {
-      if (!handleAuthError(err)) setSubmitError('The review could not be saved. Please try again.');
+      if (!handleAuthError(err)) {
+        setSubmitError('The review could not be saved. Please try again.');
+        toast.error('The review could not be saved. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -175,9 +182,10 @@ export default function DoctorCase() {
 
   return (
     <DoctorShell>
-      <button className="doctor-case__back" type="button" onClick={() => navigate('/doctor')}>Back to queue</button>
+      <PageTransition>
+        <button className="doctor-case__back" type="button" onClick={() => navigate('/doctor')}>Back to queue</button>
 
-      {loading && <LoadingState message="Loading case details..." />}
+      {loading && <CaseSkeleton />}
       {error && (
         <div className="doctor-case__state">
           <ErrorState title={error.status === 404 ? 'Case not found' : 'Case unavailable'} message={error.status === 404 ? 'This assessment does not exist or is no longer available.' : 'The case details could not be loaded.'} onRetry={loadAssessment} />
@@ -308,6 +316,7 @@ export default function DoctorCase() {
           <img src={activeImage.src} alt={activeImage.alt} onClick={(event) => event.stopPropagation()} />
         </div>
       )}
+      </PageTransition>
     </DoctorShell>
   );
 }

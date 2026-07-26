@@ -49,6 +49,17 @@
   --radius-lg: 20px;
 
   --shadow-card: 0 1px 2px rgba(23, 38, 42, 0.06), 0 4px 16px rgba(23, 38, 42, 0.05);
+  --shadow-card-hover: 0 2px 8px rgba(23, 38, 42, 0.08), 0 8px 24px rgba(23, 38, 42, 0.06);
+  --shadow-elevated: 0 4px 12px rgba(23, 38, 42, 0.10), 0 12px 36px rgba(23, 38, 42, 0.08);
+
+  /* Animation */
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 0.15s;
+  --duration-normal: 0.25s;
+
+  /* Gradient accents */
+  --gradient-primary: linear-gradient(135deg, #1f6f6b 0%, #2a9d8f 100%);
+  --gradient-subtle: linear-gradient(135deg, rgba(31, 111, 107, 0.04) 0%, rgba(42, 157, 143, 0.07) 100%);
 
   --max-width: 480px;
 }

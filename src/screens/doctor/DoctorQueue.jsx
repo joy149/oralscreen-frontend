@@ -4,7 +4,8 @@ import { ApiError, api } from '../../api/client';
 import DoctorShell from '../../components/doctor/DoctorShell';
 import RiskTier from '../../components/doctor/RiskTier';
 import ErrorState from '../../components/shared/ErrorState';
-import LoadingState from '../../components/shared/LoadingState';
+import { QueueSkeleton } from '../../components/shared/Skeleton';
+import PageTransition from '../../components/shared/PageTransition';
 import { useDoctorSession } from '../../context/DoctorSessionContext';
 import './DoctorQueue.css';
 
@@ -150,155 +151,157 @@ export default function DoctorQueue() {
 
   return (
     <DoctorShell>
-      <div className="doctor-queue__heading">
-        <div>
-          <p>Review workspace</p>
-          <h1>Screening queue</h1>
+      <PageTransition>
+        <div className="doctor-queue__heading">
+          <div>
+            <p>Review workspace</p>
+            <h1>Screening queue</h1>
+          </div>
+          {!loading && !error && (
+            <span>
+              {filtersActive ? `${visibleItems.length} of ${items.length}` : items.length}{' '}
+              {items.length === 1 ? 'case' : 'cases'}
+            </span>
+          )}
         </div>
-        {!loading && !error && (
-          <span>
-            {filtersActive ? `${visibleItems.length} of ${items.length}` : items.length}{' '}
-            {items.length === 1 ? 'case' : 'cases'}
-          </span>
+
+        {!loading && !error && items.length > 0 && (
+          <div className="doctor-queue__toolbar">
+            <div className="doctor-queue__filter-group" role="group" aria-label="Filter by risk">
+              <button
+                type="button"
+                className={`doctor-queue__pill${riskFilter === 'ALL' ? ' is-active' : ''}`}
+                onClick={() => setRiskFilter('ALL')}
+              >
+                All risk
+              </button>
+              {RISK_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`doctor-queue__pill${riskFilter === option.value ? ' is-active' : ''}`}
+                  onClick={() => setRiskFilter(riskFilter === option.value ? 'ALL' : option.value)}
+                >
+                  <span className={`doctor-queue__pill-dot doctor-queue__pill-dot--${option.value}`} aria-hidden="true" />
+                  {option.label}
+                  <span className="doctor-queue__pill-count">{riskCounts[option.value] ?? 0}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="doctor-queue__filter-group" role="group" aria-label="Filter by status">
+              {STATUS_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`doctor-queue__pill${statusFilter === option.value ? ' is-active' : ''}`}
+                  onClick={() => setStatusFilter(statusFilter === option.value ? 'ALL' : option.value)}
+                >
+                  {option.label}
+                  <span className="doctor-queue__pill-count">{statusCounts[option.value] ?? 0}</span>
+                </button>
+              ))}
+            </div>
+
+            {filtersActive && (
+              <button type="button" className="doctor-queue__clear" onClick={clearFilters}>
+                Clear filters
+              </button>
+            )}
+          </div>
         )}
-      </div>
 
-      {!loading && !error && items.length > 0 && (
-        <div className="doctor-queue__toolbar">
-          <div className="doctor-queue__filter-group" role="group" aria-label="Filter by risk">
-            <button
-              type="button"
-              className={`doctor-queue__pill${riskFilter === 'ALL' ? ' is-active' : ''}`}
-              onClick={() => setRiskFilter('ALL')}
-            >
-              All risk
-            </button>
-            {RISK_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`doctor-queue__pill${riskFilter === option.value ? ' is-active' : ''}`}
-                onClick={() => setRiskFilter(riskFilter === option.value ? 'ALL' : option.value)}
-              >
-                <span className={`doctor-queue__pill-dot doctor-queue__pill-dot--${option.value}`} aria-hidden="true" />
-                {option.label}
-                <span className="doctor-queue__pill-count">{riskCounts[option.value] ?? 0}</span>
-              </button>
-            ))}
+        {loading && <QueueSkeleton />}
+        {error && (
+          <div className="doctor-queue__state">
+            <ErrorState title="Queue unavailable" message="The screening queue could not be loaded." onRetry={loadQueue} />
           </div>
+        )}
 
-          <div className="doctor-queue__filter-group" role="group" aria-label="Filter by status">
-            {STATUS_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`doctor-queue__pill${statusFilter === option.value ? ' is-active' : ''}`}
-                onClick={() => setStatusFilter(statusFilter === option.value ? 'ALL' : option.value)}
-              >
-                {option.label}
-                <span className="doctor-queue__pill-count">{statusCounts[option.value] ?? 0}</span>
-              </button>
-            ))}
+        {!loading && !error && items.length === 0 && (
+          <div className="doctor-queue__empty">
+            <h2>No cases waiting</h2>
+            <p>New screening assessments will appear here.</p>
           </div>
+        )}
 
-          {filtersActive && (
+        {!loading && !error && items.length > 0 && visibleItems.length === 0 && (
+          <div className="doctor-queue__empty">
+            <h2>No cases match these filters</h2>
+            <p>Try a different risk or status filter.</p>
             <button type="button" className="doctor-queue__clear" onClick={clearFilters}>
               Clear filters
             </button>
-          )}
-        </div>
-      )}
-
-      {loading && <LoadingState message="Loading screening cases..." />}
-      {error && (
-        <div className="doctor-queue__state">
-          <ErrorState title="Queue unavailable" message="The screening queue could not be loaded." onRetry={loadQueue} />
-        </div>
-      )}
-
-      {!loading && !error && items.length === 0 && (
-        <div className="doctor-queue__empty">
-          <h2>No cases waiting</h2>
-          <p>New screening assessments will appear here.</p>
-        </div>
-      )}
-
-      {!loading && !error && items.length > 0 && visibleItems.length === 0 && (
-        <div className="doctor-queue__empty">
-          <h2>No cases match these filters</h2>
-          <p>Try a different risk or status filter.</p>
-          <button type="button" className="doctor-queue__clear" onClick={clearFilters}>
-            Clear filters
-          </button>
-        </div>
-      )}
-
-      {!loading && !error && visibleItems.length > 0 && (
-        <div className="doctor-queue__table" role="table" aria-label="Screening cases">
-          <div className="doctor-queue__row doctor-queue__row--header" role="row">
-            <SortableHeader
-              label="Patient"
-              sortKey="patient"
-              activeSort={sort.key}
-              activeDir={sort.dir}
-              onSort={handleSort}
-            />
-            <SortableHeader
-              label="Submitted"
-              sortKey="submitted"
-              activeSort={sort.key}
-              activeDir={sort.dir}
-              onSort={handleSort}
-              className="doctor-queue__col--submitted"
-            />
-            <SortableHeader
-              label="Risk"
-              sortKey="risk"
-              activeSort={sort.key}
-              activeDir={sort.dir}
-              onSort={handleSort}
-              className="doctor-queue__col--risk"
-            />
-            <span role="columnheader">Status</span>
-            <span aria-hidden="true" />
           </div>
-          {visibleItems.map((assessment) => {
-            const reviewed = Boolean(assessment.doctorRiskClassification);
-            return (
-              <button
-                type="button"
-                className="doctor-queue__row doctor-queue__row--case"
-                data-risk={assessment.aiRiskClassification}
-                role="row"
-                key={assessment.id}
-                onClick={() => navigate(`/doctor/case/${assessment.id}`, {
-                  state: { assessment },
-                })}
-              >
-                <span className="doctor-queue__patient" role="cell">
-                  <strong>{assessment.name || assessment.patientName || 'Unnamed patient'}</strong>
-                  <small>{[assessment.patientAge != null ? `${assessment.patientAge} years` : null, assessment.patientSex?.replaceAll?.('_', ' ')].filter(Boolean).join(' / ') || 'Details unavailable'}</small>
-                </span>
-                <span
-                  role="cell"
-                  className="doctor-queue__col--submitted"
-                  title={assessment.createdAt ? new Date(assessment.createdAt).toLocaleString() : ''}
+        )}
+
+        {!loading && !error && visibleItems.length > 0 && (
+          <div className="doctor-queue__table" role="table" aria-label="Screening cases">
+            <div className="doctor-queue__row doctor-queue__row--header" role="row">
+              <SortableHeader
+                label="Patient"
+                sortKey="patient"
+                activeSort={sort.key}
+                activeDir={sort.dir}
+                onSort={handleSort}
+              />
+              <SortableHeader
+                label="Submitted"
+                sortKey="submitted"
+                activeSort={sort.key}
+                activeDir={sort.dir}
+                onSort={handleSort}
+                className="doctor-queue__col--submitted"
+              />
+              <SortableHeader
+                label="Risk"
+                sortKey="risk"
+                activeSort={sort.key}
+                activeDir={sort.dir}
+                onSort={handleSort}
+                className="doctor-queue__col--risk"
+              />
+              <span role="columnheader">Status</span>
+              <span aria-hidden="true" />
+            </div>
+            {visibleItems.map((assessment) => {
+              const reviewed = Boolean(assessment.doctorRiskClassification);
+              return (
+                <button
+                  type="button"
+                  className="doctor-queue__row doctor-queue__row--case"
+                  data-risk={assessment.aiRiskClassification}
+                  role="row"
+                  key={assessment.id}
+                  onClick={() => navigate(`/doctor/case/${assessment.id}`, {
+                    state: { assessment },
+                  })}
                 >
-                  {relativeTime(assessment.createdAt)}
-                </span>
-                <span role="cell" className="doctor-queue__col--risk">
-                  <RiskTier classification={assessment.aiRiskClassification} />
-                </span>
-                <span role="cell" className={reviewed ? 'is-reviewed' : 'is-awaiting'}>
-                  <span className="status-dot" aria-hidden="true" />
-                  {reviewed ? 'Reviewed' : 'Awaiting review'}
-                </span>
-                <span className="doctor-queue__arrow" aria-hidden="true">&#8250;</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+                  <span className="doctor-queue__patient" role="cell">
+                    <strong>{assessment.name || assessment.patientName || 'Unnamed patient'}</strong>
+                    <small>{[assessment.patientAge != null ? `${assessment.patientAge} years` : null, assessment.patientSex?.replaceAll?.('_', ' ')].filter(Boolean).join(' / ') || 'Details unavailable'}</small>
+                  </span>
+                  <span
+                    role="cell"
+                    className="doctor-queue__col--submitted"
+                    title={assessment.createdAt ? new Date(assessment.createdAt).toLocaleString() : ''}
+                  >
+                    {relativeTime(assessment.createdAt)}
+                  </span>
+                  <span role="cell" className="doctor-queue__col--risk">
+                    <RiskTier classification={assessment.aiRiskClassification} />
+                  </span>
+                  <span role="cell" className={reviewed ? 'is-reviewed' : 'is-awaiting'}>
+                    <span className="status-dot" aria-hidden="true" />
+                    {reviewed ? 'Reviewed' : 'Awaiting review'}
+                  </span>
+                  <span className="doctor-queue__arrow" aria-hidden="true">&#8250;</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </PageTransition>
     </DoctorShell>
   );
 }

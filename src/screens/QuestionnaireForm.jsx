@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import ErrorState from '../components/shared/ErrorState';
-import LoadingState from '../components/shared/LoadingState';
+import { QuestionnaireSkeleton } from '../components/shared/Skeleton';
+import PageTransition from '../components/shared/PageTransition';
 import { api } from '../api/client';
 import { usePatient } from '../context/PatientContext';
 import './QuestionnaireForm.css';
@@ -111,7 +112,7 @@ export default function QuestionnaireForm() {
   if (loading) {
     return (
       <AppShell step={1} totalSteps={3}>
-        <LoadingState message="Loading your answers…" />
+        <QuestionnaireSkeleton />
       </AppShell>
     );
   }
@@ -141,73 +142,75 @@ export default function QuestionnaireForm() {
 
   return (
     <AppShell step={1} totalSteps={3}>
-      <div className="screen">
-        <h1>Tell us what's going on</h1>
-        <p className="questionnaire-form__subhead">This helps the AI and the doctor understand your case.</p>
+      <PageTransition>
+        <div className="screen">
+          <h1>Tell us what's going on</h1>
+          <p className="questionnaire-form__subhead">This helps the AI and the doctor understand your case.</p>
 
-        <form onSubmit={handleSubmit} className="questionnaire-form">
-          <div className="field">
-            <label htmlFor="duration">How long have you noticed this?</label>
-            <select
-              id="duration"
-              value={durationOfSymptom}
-              onChange={(e) => setDurationOfSymptom(e.target.value)}
-            >
-              <option value="" disabled>
-                Select duration
-              </option>
-              {DURATION_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="card questionnaire-form__toggles">
-            {TOGGLES.map((t) => (
-              <div className="toggle-row" key={t.key}>
-                <span>{t.label}</span>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={toggles[t.key]}
-                    onChange={() => toggle(t.key)}
-                  />
-                  <span className="track" />
-                  <span className="thumb" />
-                </label>
-              </div>
-            ))}
-          </div>
-
-          <div className="field">
-            <label htmlFor="notes">Anything else you'd like to add? (optional)</label>
-            <textarea
-              id="notes"
-              value={additionalNotes}
-              onChange={(e) => setAdditionalNotes(e.target.value)}
-              placeholder="Describe what you're noticing, in your own words"
-            />
-          </div>
-
-          <div className="questionnaire-form__actions">
-            {questionnaireId && (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => navigate(`/questionnaire/${questionnaireId}/photos`)}
-                disabled={submitting}
+          <form onSubmit={handleSubmit} className="questionnaire-form">
+            <div className="field">
+              <label htmlFor="duration">How long have you noticed this?</label>
+              <select
+                id="duration"
+                value={durationOfSymptom}
+                onChange={(e) => setDurationOfSymptom(e.target.value)}
               >
-                Back to photos
+                <option value="" disabled>
+                  Select duration
+                </option>
+                {DURATION_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="card questionnaire-form__toggles">
+              {TOGGLES.map((t) => (
+                <div className="toggle-row" key={t.key}>
+                  <span>{t.label}</span>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={toggles[t.key]}
+                      onChange={() => toggle(t.key)}
+                    />
+                    <span className="track" />
+                    <span className="thumb" />
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <div className="field">
+              <label htmlFor="notes">Anything else you'd like to add? (optional)</label>
+              <textarea
+                id="notes"
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                placeholder="Describe what you're noticing, in your own words"
+              />
+            </div>
+
+            <div className="questionnaire-form__actions">
+              {questionnaireId && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => navigate(`/questionnaire/${questionnaireId}/photos`)}
+                  disabled={submitting}
+                >
+                  Back to photos
+                </button>
+              )}
+              <button type="submit" className="btn btn-primary" disabled={!isComplete || submitting}>
+                {submitting ? 'Saving…' : questionnaireId ? 'Save changes & return to photos' : 'Continue to photos'}
               </button>
-            )}
-            <button type="submit" className="btn btn-primary" disabled={!isComplete || submitting}>
-              {submitting ? 'Saving…' : questionnaireId ? 'Save changes & return to photos' : 'Continue to photos'}
-            </button>
-          </div>
-        </form>
-      </div>
+            </div>
+          </form>
+        </div>
+      </PageTransition>
     </AppShell>
   );
 }

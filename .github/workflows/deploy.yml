@@ -1,0 +1,49 @@
+name: Deploy React App to Single EC2
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Added setup-node step to ensure a consistent build environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' 
+
+      - name: Build React App
+        run: |
+          npm install
+          npm run build
+          # Note: Change 'dist' to 'build' if using Create React App instead of Vite
+          cd dist && zip -r ../app-build.zip .
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4 # Updated from v1 to v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-2
+
+      - name: Upload Build to S3
+        run: |
+          aws s3 cp app-build.zip s3://oralscreen-ui-builds/app-build.zip
+
+      - name: Execute Remote Deploy & Config via SSM
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=i-0151dd80fd1da7de6" \
+            --parameters 'commands=[
+              "aws s3 cp s3://oralscreen-ui-builds/app-build.zip /tmp/app-build.zip",
+              "unzip -o /tmp/app-build.zip -d /usr/share/nginx/html/",
+              "printf \"server { listen 80; server_name _; root /usr/share/nginx/html; index index.html; location / { try_files \\$uri \\$uri/ /index.html; } }\" > /etc/nginx/conf.d/react-app.conf",
+              "chmod -R 755 /usr/share/nginx/html/",
+              "systemctl reload nginx"
+            ]'

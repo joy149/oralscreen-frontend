@@ -8,11 +8,20 @@
   padding: 0 var(--space-6);
   display: flex;
   align-items: center;
+  gap: var(--space-2);
   border-bottom: 1px solid var(--color-line);
   background: var(--color-paper-raised);
   color: var(--color-primary-dark);
   font-family: var(--font-display);
   font-weight: 700;
+}
+
+.doctor-login__logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 50%;
 }
 
 .doctor-login__brand span {

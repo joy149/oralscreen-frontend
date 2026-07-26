@@ -9,11 +9,15 @@ import { DoctorSessionProvider } from './context/DoctorSessionContext';
 import DoctorLogin from './screens/doctor/DoctorLogin';
 import DoctorQueue from './screens/doctor/DoctorQueue';
 import DoctorCase from './screens/doctor/DoctorCase';
+import SmoothScroll from './components/shared/SmoothScroll';
+import { ToastProvider } from './components/shared/Toast';
 
 export default function App() {
   return (
     <PatientProvider>
       <DoctorSessionProvider>
+        <SmoothScroll>
+        <ToastProvider>
         <BrowserRouter>
         <Routes>
           <Route path="/" element={<PhoneEntry />} />
@@ -28,7 +32,10 @@ export default function App() {
           </Route>
         </Routes>
         </BrowserRouter>
+        </ToastProvider>
+        </SmoothScroll>
       </DoctorSessionProvider>
     </PatientProvider>
   );
 }
+

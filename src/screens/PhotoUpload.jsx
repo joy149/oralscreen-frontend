@@ -3,7 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import ImageUploadRow from '../components/shared/ImageUploadRow';
 import ErrorState from '../components/shared/ErrorState';
+import PageTransition from '../components/shared/PageTransition';
+import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../api/client';
+import { useToast } from '../components/shared/Toast';
 import './PhotoUpload.css';
 
 let nextId = 0;
@@ -37,9 +40,19 @@ function AssessmentLoadingScreen() {
         </div>
         <p className="assessment-loading__eyebrow">Analysis takes about 20-30 seconds</p>
         <h1>Analyzing your screening</h1>
-        <p className="assessment-loading__status" role="status" aria-live="polite">
-          {ASSESSMENT_STATUS_MESSAGES[messageIndex]}
-        </p>
+        <div className="assessment-loading__status" role="status" aria-live="polite">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={messageIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {ASSESSMENT_STATUS_MESSAGES[messageIndex]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
         <p className="assessment-loading__note">
           Please keep this screen open while we prepare your result.
         </p>
@@ -51,6 +64,7 @@ function AssessmentLoadingScreen() {
 export default function PhotoUpload() {
   const { questionnaireId } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const uploadQueueRef = useRef([]);
   const activeUploadsRef = useRef(0);
   const mountedRef = useRef(true);
@@ -84,6 +98,7 @@ export default function PhotoUpload() {
           setItems((prev) =>
             prev.map((it) => (it.id === item.id ? { ...it, status: 'success', progress: 100, upload } : it))
           );
+          toast.success('Photo uploaded');
         }
       })
       .catch((err) => {
@@ -95,13 +110,14 @@ export default function PhotoUpload() {
                 : it
             )
           );
+          toast.error('Photo upload failed — tap to retry');
         }
       })
       .finally(() => {
         activeUploadsRef.current -= 1;
         processQueueRef.current();
       });
-  }, [questionnaireId]);
+  }, [questionnaireId, toast]);
 
   const processQueue = useCallback(() => {
     while (activeUploadsRef.current < MAX_CONCURRENT_UPLOADS && uploadQueueRef.current.length > 0) {
@@ -306,6 +322,7 @@ export default function PhotoUpload() {
       navigate(`/questionnaire/${questionnaireId}/assessment`, { state: { assessment } });
     } catch (err) {
       setAssessError(err);
+      toast.error('Assessment could not be started. Please try again.');
     } finally {
       setAssessing(false);
     }
@@ -329,147 +346,149 @@ export default function PhotoUpload() {
 
   return (
     <AppShell step={2} totalSteps={3}>
-      <div className="screen photo-upload">
-        <h1>Add a photo</h1>
-        <p className="photo-upload__subhead">
-          Clear, well-lit photos help the AI and the doctor see what you're seeing.
-        </p>
+      <PageTransition>
+        <div className="screen photo-upload">
+          <h1>Add a photo</h1>
+          <p className="photo-upload__subhead">
+            Clear, well-lit photos help the AI and the doctor see what you're seeing.
+          </p>
 
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleFilesSelected}
-          className="photo-upload__hidden-input"
-          id="photo-library-input"
-        />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFilesSelected}
+            className="photo-upload__hidden-input"
+            id="photo-library-input"
+          />
 
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFilesSelected}
-          className="photo-upload__hidden-input"
-          id="photo-camera-input"
-        />
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFilesSelected}
+            className="photo-upload__hidden-input"
+            id="photo-camera-input"
+          />
 
-        <div className="photo-upload__pickers">
-          <button type="button" className="photo-upload__picker" onClick={() => openCamera('environment')}>
-            <span className="photo-upload__picker-icon">+</span>
-            <span>Take a photo</span>
-          </button>
-          <label htmlFor="photo-library-input" className="photo-upload__picker">
-            <span className="photo-upload__picker-icon">+</span>
-            <span>Choose photos</span>
-          </label>
-        </div>
+          <div className="photo-upload__pickers">
+            <button type="button" className="photo-upload__picker" onClick={() => openCamera('environment')}>
+              <span className="photo-upload__picker-icon">+</span>
+              <span>Take a photo</span>
+            </button>
+            <label htmlFor="photo-library-input" className="photo-upload__picker">
+              <span className="photo-upload__picker-icon">+</span>
+              <span>Choose photos</span>
+            </label>
+          </div>
 
-        {cameraStream && (
-          <div
-            className="photo-upload__camera"
-            role="dialog"
-            aria-label="Camera"
-            style={{ position: 'relative' }}
-          >
-            <video ref={videoRef} className="photo-upload__camera-preview" autoPlay playsInline muted />
-            {hasMultipleCameras && (
-              <button
-                type="button"
-                className="photo-upload__camera-switch"
-                onClick={switchCamera}
-                disabled={switchingCamera}
-                aria-label="Switch camera"
-                title="Switch camera"
-                style={{
-                  position: 'absolute',
-                  top: '12px',
-                  right: '12px',
-                  width: '40px',
-                  height: '40px',
-                  padding: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'rgba(0, 0, 0, 0.45)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  color: '#fff',
-                  cursor: switchingCamera ? 'default' : 'pointer',
-                  opacity: switchingCamera ? 0.6 : 1,
-                  zIndex: 2,
-                }}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+          {cameraStream && (
+            <div
+              className="photo-upload__camera"
+              role="dialog"
+              aria-label="Camera"
+              style={{ position: 'relative' }}
+            >
+              <video ref={videoRef} className="photo-upload__camera-preview" autoPlay playsInline muted />
+              {hasMultipleCameras && (
+                <button
+                  type="button"
+                  className="photo-upload__camera-switch"
+                  onClick={switchCamera}
+                  disabled={switchingCamera}
+                  aria-label="Switch camera"
+                  title="Switch camera"
                   style={{
-                    transform: switchingCamera ? 'rotate(180deg)' : 'none',
-                    transition: 'transform 0.2s ease',
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    width: '40px',
+                    height: '40px',
+                    padding: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(0, 0, 0, 0.45)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    color: '#fff',
+                    cursor: switchingCamera ? 'default' : 'pointer',
+                    opacity: switchingCamera ? 0.6 : 1,
+                    zIndex: 2,
                   }}
                 >
-                  <path d="M17 2.1l4 4-4 4" />
-                  <path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8" />
-                  <path d="M7 21.9l-4-4 4-4" />
-                  <path d="M21 11.8v2a4 4 0 0 1-4 4H4.2" />
-                </svg>
-              </button>
-            )}
-            <div className="photo-upload__camera-actions">
-              <button type="button" className="btn btn-secondary" onClick={closeCamera}>Cancel</button>
-              <button type="button" className="btn btn-primary" onClick={capturePhoto}>Use this photo</button>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{
+                      transform: switchingCamera ? 'rotate(180deg)' : 'none',
+                      transition: 'transform 0.2s ease',
+                    }}
+                  >
+                    <path d="M17 2.1l4 4-4 4" />
+                    <path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8" />
+                    <path d="M7 21.9l-4-4 4-4" />
+                    <path d="M21 11.8v2a4 4 0 0 1-4 4H4.2" />
+                  </svg>
+                </button>
+              )}
+              <div className="photo-upload__camera-actions">
+                <button type="button" className="btn btn-secondary" onClick={closeCamera}>Cancel</button>
+                <button type="button" className="btn btn-primary" onClick={capturePhoto}>Use this photo</button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {cameraError && (
-          <p className="photo-upload__hint">
-            {cameraError} <button type="button" className="photo-upload__camera-fallback" onClick={() => cameraInputRef.current?.click()}>Open camera picker</button>
-          </p>
-        )}
+          {cameraError && (
+            <p className="photo-upload__hint">
+              {cameraError} <button type="button" className="photo-upload__camera-fallback" onClick={() => cameraInputRef.current?.click()}>Open camera picker</button>
+            </p>
+          )}
 
-        {visibleItems.length > 0 && (
-          <div className="photo-upload__list">
-            {visibleItems.map((item) => (
-              <ImageUploadRow
-                key={item.id}
-                item={item}
-                onRetry={handleRetry}
-                onRemove={handleRemove}
-              />
-            ))}
-          </div>
-        )}
+          {visibleItems.length > 0 && (
+            <div className="photo-upload__list">
+              {visibleItems.map((item) => (
+                <ImageUploadRow
+                  key={item.id}
+                  item={item}
+                  onRetry={handleRetry}
+                  onRemove={handleRemove}
+                />
+              ))}
+            </div>
+          )}
 
-        {hasFailed && (
-          <p className="photo-upload__hint">
-            One or more photos could not be uploaded. Please re-upload or remove them before continuing.
-          </p>
-        )}
+          {hasFailed && (
+            <p className="photo-upload__hint">
+              One or more photos could not be uploaded. Please re-upload or remove them before continuing.
+            </p>
+          )}
 
-        <button
-          type="button"
-          className="btn btn-primary photo-upload__continue"
-          disabled={!canContinue || assessing}
-          onClick={handleContinue}
-        >
-          {assessing ? 'Running assessment…' : `Continue with ${successCount} photo${successCount === 1 ? '' : 's'}`}
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary photo-upload__back"
-          onClick={() => navigate(`/questionnaire/${questionnaireId}`)}
-          disabled={assessing}
-        >
-          Back to questionnaire
-        </button>
-      </div>
+          <button
+            type="button"
+            className="btn btn-primary photo-upload__continue"
+            disabled={!canContinue || assessing}
+            onClick={handleContinue}
+          >
+            {assessing ? 'Running assessment…' : `Continue with ${successCount} photo${successCount === 1 ? '' : 's'}`}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary photo-upload__back"
+            onClick={() => navigate(`/questionnaire/${questionnaireId}`)}
+            disabled={assessing}
+          >
+            Back to questionnaire
+          </button>
+        </div>
+      </PageTransition>
     </AppShell>
   );
 }

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import ErrorState from '../components/shared/ErrorState';
+import PageTransition from '../components/shared/PageTransition';
+import { motion } from 'motion/react';
 import { api, ApiError } from '../api/client';
 import { usePatient } from '../context/PatientContext';
 import './PhoneEntry.css';
@@ -101,91 +103,94 @@ export default function PhoneEntry() {
 
   return (
     <AppShell>
-      <div className="screen phone-entry">
-        <div className="phone-entry__role-switch" aria-label="Choose login type">
-          <button type="button" className="is-active" aria-pressed="true">
-            Patient
-          </button>
-          <button type="button" aria-pressed="false" onClick={() => navigate('/doctor/login')}>
-            Doctor
-          </button>
-        </div>
-
-        <div className="phone-entry__intro">
-          <h1>Let's take a look</h1>
-          <p>Answer a few questions and share a photo. A dentist reviews every result.</p>
-        </div>
-
-        {stage === 'phone' && (
-          <form onSubmit={handlePhoneSubmit} className="card">
-            <div className="field">
-              <label htmlFor="phone">Mobile number</label>
-              <input
-                id="phone"
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel"
-                placeholder="10-digit mobile number"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-              />
-            </div>
-            <button type="submit" className="btn btn-primary" disabled={!isPhoneValid || submitting}>
-              {submitting ? 'Please wait…' : 'Continue'}
+      <PageTransition>
+        <div className="screen phone-entry">
+          <div className="phone-entry__role-switch" aria-label="Choose login type">
+            <button type="button" className="is-active" aria-pressed="true">
+              Patient
+              <motion.div className="phone-entry__role-indicator" layoutId="role-indicator" />
             </button>
-          </form>
-        )}
+            <button type="button" aria-pressed="false" onClick={() => navigate('/doctor/login')}>
+              Doctor
+            </button>
+          </div>
 
-        {stage === 'details' && (
-          <form onSubmit={handleDetailsSubmit} className="card">
-            <p className="phone-entry__new-patient-note">First time here — a few quick details.</p>
-            <div className="field">
-              <label htmlFor="name">Full name</label>
-              <input
-                id="name"
-                type="text"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="phone-entry__row">
+          <div className="phone-entry__intro">
+            <h1>Let's take a look</h1>
+            <p>Answer a few questions and share a photo. A dentist reviews every result.</p>
+          </div>
+
+          {stage === 'phone' && (
+            <form onSubmit={handlePhoneSubmit} className="card">
               <div className="field">
-                <label htmlFor="age">Age</label>
+                <label htmlFor="phone">Mobile number</label>
                 <input
-                  id="age"
-                  type="number"
-                  min="0"
-                  max="120"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
+                  id="phone"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  placeholder="10-digit mobile number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 />
               </div>
+              <button type="submit" className="btn btn-primary" disabled={!isPhoneValid || submitting}>
+                {submitting ? 'Please wait…' : 'Continue'}
+              </button>
+            </form>
+          )}
+
+          {stage === 'details' && (
+            <form onSubmit={handleDetailsSubmit} className="card">
+              <p className="phone-entry__new-patient-note">First time here — a few quick details.</p>
               <div className="field">
-                <label htmlFor="sex">Sex</label>
-                <select
-                  id="sex"
-                  value={sex}
-                  onChange={(e) => setSex(e.target.value)}
-                  disabled={loadingSexOptions}
-                >
-                  <option value="">
-                    {loadingSexOptions ? 'Loading…' : 'Select sex (optional)'}
-                  </option>
-                  {sexOptions.map((option) => (
-                    <option key={option.value || option.label} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <label htmlFor="name">Full name</label>
+                <input
+                  id="name"
+                  type="text"
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
-            </div>
-            <button type="submit" className="btn btn-primary" disabled={!name.trim() || submitting}>
-              {submitting ? 'Please wait…' : 'Continue'}
-            </button>
-          </form>
-        )}
-      </div>
+              <div className="phone-entry__row">
+                <div className="field">
+                  <label htmlFor="age">Age</label>
+                  <input
+                    id="age"
+                    type="number"
+                    min="0"
+                    max="120"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="sex">Sex</label>
+                  <select
+                    id="sex"
+                    value={sex}
+                    onChange={(e) => setSex(e.target.value)}
+                    disabled={loadingSexOptions}
+                  >
+                    <option value="">
+                      {loadingSexOptions ? 'Loading…' : 'Select sex (optional)'}
+                    </option>
+                    {sexOptions.map((option) => (
+                      <option key={option.value || option.label} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <button type="submit" className="btn btn-primary" disabled={!name.trim() || submitting}>
+                {submitting ? 'Please wait…' : 'Continue'}
+              </button>
+            </form>
+          )}
+        </div>
+      </PageTransition>
     </AppShell>
   );
 }
