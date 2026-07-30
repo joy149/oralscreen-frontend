@@ -79,8 +79,16 @@
   text-align: center;
 }
 
-.risk-gauge__result h2 {
+.risk-gauge__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
   margin-bottom: var(--space-2);
+}
+
+.risk-gauge__result h2 {
+  margin-bottom: 0;
 }
 
 .risk-gauge__result p {

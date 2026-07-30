@@ -132,7 +132,12 @@ export default function PhoneEntry() {
                   placeholder="10-digit mobile number"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  aria-invalid={phoneNumber.length > 0 && !isPhoneValid}
+                  aria-describedby="phone-hint"
                 />
+                <span id="phone-hint" className="sr-only" style={{ display: 'none' }}>
+                  Please enter a valid 10-digit mobile number.
+                </span>
               </div>
               <button type="submit" className="btn btn-primary" disabled={!isPhoneValid || submitting}>
                 {submitting ? 'Please wait…' : 'Continue'}

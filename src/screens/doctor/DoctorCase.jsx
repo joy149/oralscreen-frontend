@@ -8,6 +8,7 @@ import { CaseSkeleton } from '../../components/shared/Skeleton';
 import { useToast } from '../../components/shared/Toast';
 import PageTransition from '../../components/shared/PageTransition';
 import { useDoctorSession } from '../../context/DoctorSessionContext';
+import { ZoomIn, ZoomOut, RotateCw, Columns, X, ArrowLeft } from 'lucide-react';
 import './DoctorCase.css';
 
 const RISK_OPTIONS = [
@@ -112,6 +113,9 @@ export default function DoctorCase() {
   const [submitError, setSubmitError] = useState('');
   const [saved, setSaved] = useState(false);
   const [activeImage, setActiveImage] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [compareImage, setCompareImage] = useState(null);
   const [showReasoning, setShowReasoning] = useState(false);
 
   const handleAuthError = useCallback((err) => {
@@ -148,6 +152,37 @@ export default function DoctorCase() {
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [activeImage]);
+
+  useEffect(() => {
+    function handleCaseShortcuts(e) {
+      if (activeImage) return;
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+
+      if (e.key === '1' && activeTag !== 'input' && activeTag !== 'textarea') {
+        e.preventDefault();
+        setRisk('NO_MILD_RISK');
+        setSaved(false);
+        toast.info('Selected: No / mild risk (Key 1)');
+      } else if (e.key === '2' && activeTag !== 'input' && activeTag !== 'textarea') {
+        e.preventDefault();
+        setRisk('MODERATE_RISK');
+        setSaved(false);
+        toast.info('Selected: Moderate risk (Key 2)');
+      } else if (e.key === '3' && activeTag !== 'input' && activeTag !== 'textarea') {
+        e.preventDefault();
+        setRisk('HIGH_RISK');
+        setSaved(false);
+        toast.info('Selected: High risk (Key 3)');
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        const form = document.querySelector('.doctor-case__form');
+        if (form) form.requestSubmit();
+      }
+    }
+
+    window.addEventListener('keydown', handleCaseShortcuts);
+    return () => window.removeEventListener('keydown', handleCaseShortcuts);
+  }, [activeImage, toast]);
 
   const questionnaire = assessment?.questionnaireResponse || assessment?.questionnaire || {};
   const patient = assessment?.patient || questionnaire.patient || {};
@@ -311,9 +346,90 @@ export default function DoctorCase() {
       )}
 
       {activeImage && (
-        <div className="doctor-case__lightbox" role="dialog" aria-modal="true" aria-label="Screening photo preview" onClick={() => setActiveImage(null)}>
-          <button type="button" aria-label="Close image preview" onClick={() => setActiveImage(null)}>Close</button>
-          <img src={activeImage.src} alt={activeImage.alt} onClick={(event) => event.stopPropagation()} />
+        <div className="doctor-case__lightbox" role="dialog" aria-modal="true" aria-label="Clinical photo viewer">
+          <div className="doctor-case__lightbox-header">
+            <div className="doctor-case__lightbox-title">
+              <span>Clinical Image Inspection</span>
+            </div>
+            <div className="doctor-case__lightbox-toolbar">
+              <button
+                type="button"
+                title="Zoom Out"
+                onClick={() => setZoomLevel((z) => Math.max(1, z - 0.5))}
+              >
+                <ZoomOut size={16} />
+              </button>
+              <span className="doctor-case__zoom-label">{Math.round(zoomLevel * 100)}%</span>
+              <button
+                type="button"
+                title="Zoom In"
+                onClick={() => setZoomLevel((z) => Math.min(3.5, z + 0.5))}
+              >
+                <ZoomIn size={16} />
+              </button>
+              <button
+                type="button"
+                title="Rotate 90deg"
+                onClick={() => setRotation((r) => (r + 90) % 360)}
+              >
+                <RotateCw size={16} />
+              </button>
+              {images.length > 1 && (
+                <button
+                  type="button"
+                  className={compareImage ? 'is-active' : ''}
+                  title="Side-by-side comparison"
+                  onClick={() =>
+                    setCompareImage(
+                      compareImage
+                        ? null
+                        : images.find((i) => (i.src || directImageSource(i)) !== activeImage.src) || images[0]
+                    )
+                  }
+                >
+                  <Columns size={16} /> {compareImage ? 'Single View' : 'Compare'}
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              className="doctor-case__lightbox-close"
+              aria-label="Close lightbox"
+              onClick={() => {
+                setActiveImage(null);
+                setCompareImage(null);
+                setZoomLevel(1);
+                setRotation(0);
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className={`doctor-case__lightbox-viewport ${compareImage ? 'is-split' : ''}`}>
+            <div className="doctor-case__lightbox-frame">
+              <img
+                src={activeImage.src}
+                alt={activeImage.alt || 'Screening photo'}
+                style={{
+                  transform: `scale(${zoomLevel}) rotate(${rotation}deg)`,
+                  transition: 'transform 0.15s ease',
+                }}
+              />
+            </div>
+            {compareImage && (
+              <div className="doctor-case__lightbox-frame">
+                <img
+                  src={compareImage.src || directImageSource(compareImage)}
+                  alt="Comparison photo"
+                  style={{
+                    transform: `scale(${zoomLevel}) rotate(${rotation}deg)`,
+                    transition: 'transform 0.15s ease',
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
       </PageTransition>

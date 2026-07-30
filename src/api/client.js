@@ -85,6 +85,20 @@ function doctorRequest(path, token, options = {}) {
   });
 }
 
+function adminRequest(path, adminKey, options = {}) {
+  const key = adminKey || import.meta.env.VITE_ADMIN_KEY || '';
+  const headers = {
+    ...(options.headers || {}),
+  };
+  if (key) {
+    headers['X-Admin-Key'] = key;
+  }
+  return request(path, {
+    ...options,
+    headers,
+  });
+}
+
 async function doctorBlobRequest(path, token) {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { 
@@ -244,6 +258,24 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  getPendingDoctors: (adminKey) =>
+    adminRequest('/api/admin/doctors', adminKey),
+
+  approveDoctor: async (doctorId, adminKey) => {
+    try {
+      return await adminRequest(`/api/admin/doctors/${doctorId}/approve`, adminKey, {
+        method: 'POST',
+      });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        return await adminRequest(`/api/admin/${doctorId}/approve`, adminKey, {
+          method: 'POST',
+        });
+      }
+      throw err;
+    }
+  },
 
   resolveApiUrl,
 };
