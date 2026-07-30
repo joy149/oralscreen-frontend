@@ -12,6 +12,8 @@ import DoctorCase from './screens/doctor/DoctorCase';
 import SmoothScroll from './components/shared/SmoothScroll';
 import { ToastProvider } from './components/shared/Toast';
 
+import AdminDashboard from './screens/admin/AdminDashboard';
+
 export default function App() {
   return (
     <PatientProvider>
@@ -25,6 +27,7 @@ export default function App() {
           <Route path="/questionnaire/:questionnaireId" element={<QuestionnaireForm />} />
           <Route path="/questionnaire/:questionnaireId/photos" element={<PhotoUpload />} />
           <Route path="/questionnaire/:questionnaireId/assessment" element={<AssessmentPending />} />
+          <Route path="/doctor/admin" element={<AdminDashboard />} />
           <Route path="/doctor/login" element={<DoctorLogin />} />
           <Route element={<DoctorRoute />}>
             <Route path="/doctor" element={<DoctorQueue />} />
