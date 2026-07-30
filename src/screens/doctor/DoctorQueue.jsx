@@ -149,6 +149,31 @@ export default function DoctorQueue() {
     setStatusFilter('ALL');
   }, []);
 
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (['input', 'textarea', 'select'].includes(document.activeElement?.tagName?.toLowerCase())) return;
+      if (visibleItems.length === 0) return;
+
+      if (e.key === 'j' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        setFocusedIndex((prev) => Math.min(prev + 1, visibleItems.length - 1));
+      } else if (e.key === 'k' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setFocusedIndex((prev) => Math.max(prev - 1, 0));
+      } else if (e.key === 'Enter' && focusedIndex >= 0 && visibleItems[focusedIndex]) {
+        e.preventDefault();
+        const target = visibleItems[focusedIndex];
+        const caseId = target.id || target.assessmentId;
+        if (caseId) navigate(`/doctor/case/${caseId}`);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visibleItems, focusedIndex, navigate]);
+
   return (
     <DoctorShell>
       <PageTransition>

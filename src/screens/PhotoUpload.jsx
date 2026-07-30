@@ -7,10 +7,18 @@ import PageTransition from '../components/shared/PageTransition';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../api/client';
 import { useToast } from '../components/shared/Toast';
+import { Camera, ImagePlus, RefreshCw, Info, Sparkles } from 'lucide-react';
 import './PhotoUpload.css';
 
 let nextId = 0;
 const MAX_CONCURRENT_UPLOADS = 1;
+const SCREENING_ANGLES = [
+  { id: 'front', label: 'Front Teeth & Gums', hint: 'Center front teeth & gums inside the oval guide' },
+  { id: 'upper', label: 'Upper Arch', hint: 'Tilt head back slightly to capture roof of mouth' },
+  { id: 'lower', label: 'Lower Floor', hint: 'Open wide to capture floor of mouth and lower arch' },
+  { id: 'cheek', label: 'Inner Cheek / Tongue', hint: 'Pull cheek side-to-side or extend tongue' },
+];
+
 const ASSESSMENT_STATUS_MESSAGES = [
   'Reviewing your photos...',
   'Checking symptoms...',
@@ -80,6 +88,7 @@ export default function PhotoUpload() {
   const [facingMode, setFacingMode] = useState('environment');
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
   const [switchingCamera, setSwitchingCamera] = useState(false);
+  const [selectedAngle, setSelectedAngle] = useState('front');
 
   const startUpload = useCallback((item) => {
     activeUploadsRef.current += 1;
@@ -283,6 +292,9 @@ export default function PhotoUpload() {
     canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
       if (!blob) return;
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(50);
+      }
       const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
       addFiles([file]);
       closeCamera();
@@ -374,11 +386,11 @@ export default function PhotoUpload() {
 
           <div className="photo-upload__pickers">
             <button type="button" className="photo-upload__picker" onClick={() => openCamera('environment')}>
-              <span className="photo-upload__picker-icon">+</span>
+              <Camera size={28} className="photo-upload__picker-icon" />
               <span>Take a photo</span>
             </button>
             <label htmlFor="photo-library-input" className="photo-upload__picker">
-              <span className="photo-upload__picker-icon">+</span>
+              <ImagePlus size={28} className="photo-upload__picker-icon" />
               <span>Choose photos</span>
             </label>
           </div>
@@ -387,62 +399,69 @@ export default function PhotoUpload() {
             <div
               className="photo-upload__camera"
               role="dialog"
-              aria-label="Camera"
-              style={{ position: 'relative' }}
+              aria-label="Oral screening camera with positioning overlay"
             >
-              <video ref={videoRef} className="photo-upload__camera-preview" autoPlay playsInline muted />
-              {hasMultipleCameras && (
-                <button
-                  type="button"
-                  className="photo-upload__camera-switch"
-                  onClick={switchCamera}
-                  disabled={switchingCamera}
-                  aria-label="Switch camera"
-                  title="Switch camera"
-                  style={{
-                    position: 'absolute',
-                    top: '12px',
-                    right: '12px',
-                    width: '40px',
-                    height: '40px',
-                    padding: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'rgba(0, 0, 0, 0.45)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    color: '#fff',
-                    cursor: switchingCamera ? 'default' : 'pointer',
-                    opacity: switchingCamera ? 0.6 : 1,
-                    zIndex: 2,
-                  }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{
-                      transform: switchingCamera ? 'rotate(180deg)' : 'none',
-                      transition: 'transform 0.2s ease',
-                    }}
+              <div className="photo-upload__angle-selector" role="tablist" aria-label="Screening angle selector">
+                {SCREENING_ANGLES.map((angle) => (
+                  <button
+                    key={angle.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={selectedAngle === angle.id}
+                    className={`photo-upload__angle-chip ${selectedAngle === angle.id ? 'is-active' : ''}`}
+                    onClick={() => setSelectedAngle(angle.id)}
                   >
-                    <path d="M17 2.1l4 4-4 4" />
-                    <path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8" />
-                    <path d="M7 21.9l-4-4 4-4" />
-                    <path d="M21 11.8v2a4 4 0 0 1-4 4H4.2" />
+                    {angle.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="photo-upload__camera-viewport">
+                <video ref={videoRef} className="photo-upload__camera-preview" autoPlay playsInline muted />
+                <div className="photo-upload__camera-overlay" aria-hidden="true">
+                  <svg viewBox="0 0 100 100" className="photo-upload__framing-svg">
+                    <ellipse cx="50" cy="50" rx="34" ry="24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="1.2" strokeDasharray="4 2" />
+                    <circle cx="50" cy="50" r="1.5" fill="rgba(255,255,255,0.6)" />
+                    <line x1="50" y1="20" x2="50" y2="80" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
+                    <line x1="16" y1="50" x2="84" y2="50" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
                   </svg>
-                </button>
-              )}
+                  <div className="photo-upload__overlay-badge">
+                    <span>{SCREENING_ANGLES.find((a) => a.id === selectedAngle)?.hint}</span>
+                  </div>
+                </div>
+
+                {hasMultipleCameras && (
+                  <button
+                    type="button"
+                    className="photo-upload__camera-switch"
+                    onClick={switchCamera}
+                    disabled={switchingCamera}
+                    aria-label="Switch camera"
+                    title="Switch camera"
+                  >
+                    <RefreshCw size={18} style={{ transform: switchingCamera ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+                  </button>
+                )}
+              </div>
+
               <div className="photo-upload__camera-actions">
                 <button type="button" className="btn btn-secondary" onClick={closeCamera}>Cancel</button>
-                <button type="button" className="btn btn-primary" onClick={capturePhoto}>Use this photo</button>
+                <button type="button" className="btn btn-primary" onClick={capturePhoto}>Capture photo</button>
               </div>
+            </div>
+          )}
+
+          {!cameraStream && visibleItems.length === 0 && (
+            <div className="photo-upload__guidelines">
+              <div className="photo-upload__guidelines-title">
+                <Info size={18} />
+                <span>Tips for accurate screening photos</span>
+              </div>
+              <ul>
+                <li>Ensure good room lighting or flash is enabled</li>
+                <li>Keep the camera steady 4–6 inches from mouth</li>
+                <li>Capture front teeth, upper arch, and lower floor</li>
+              </ul>
             </div>
           )}
 

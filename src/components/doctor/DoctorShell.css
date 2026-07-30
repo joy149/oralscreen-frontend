@@ -1,6 +1,7 @@
 .doctor-shell {
   min-height: 100dvh;
-  background: #f5f7f6;
+  background: var(--color-paper);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .doctor-shell__header {
@@ -12,6 +13,27 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
+}
+
+.doctor-shell__theme-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  border: 1px solid var(--color-line) !important;
+  background: var(--color-paper) !important;
+  color: var(--color-ink) !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.doctor-shell__theme-btn:hover {
+  background: var(--color-primary-soft) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
 }
 
 .doctor-shell__brand {

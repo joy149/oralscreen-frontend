@@ -5,8 +5,34 @@ import PageTransition from '../../components/shared/PageTransition';
 import ErrorState from '../../components/shared/ErrorState';
 import { QueueSkeleton } from '../../components/shared/Skeleton';
 import { useToast } from '../../components/shared/Toast';
+import { RefreshCw, CheckCircle2, UserCheck, TrendingUp, ShieldAlert, Clock } from 'lucide-react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
+import { Line, Doughnut } from 'react-chartjs-2';
 import oralscreenLogo from '../../assets/oralscreen_icon.jpg';
 import './AdminDashboard.css';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 function extractDoctorsList(payload) {
   if (Array.isArray(payload)) return payload;
@@ -52,6 +78,54 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [approvingIds, setApprovingIds] = useState(new Set());
+
+  const lineChartData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'Screenings Completed',
+        data: [14, 22, 18, 29, 31, 24, 38],
+        borderColor: '#1f6f6b',
+        backgroundColor: 'rgba(31, 111, 107, 0.12)',
+        fill: true,
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const doughnutChartData = {
+    labels: ['Mild Risk', 'Moderate Risk', 'High Risk'],
+    datasets: [
+      {
+        data: [65, 23, 12],
+        backgroundColor: ['#5b8c6e', '#c98a2c', '#b8433a'],
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: {
+          color: '#111c1e',
+          font: { family: 'Noto Sans', size: 12 },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: '#546669' },
+      },
+      y: {
+        grid: { color: 'rgba(0,0,0,0.06)' },
+        ticks: { color: '#546669' },
+      },
+    },
+  };
 
   const loadPendingDoctors = useCallback(async () => {
     setLoading(true);
@@ -106,6 +180,55 @@ export default function AdminDashboard() {
 
       <main className="admin-main">
         <PageTransition>
+          {/* Analytics Overview Charts */}
+          <section className="admin-analytics" aria-label="Screening Analytics Overview">
+            <div className="admin-analytics__grid">
+              <div className="admin-analytics__card">
+                <div className="admin-analytics__card-header">
+                  <TrendingUp size={18} className="admin-analytics__icon" />
+                  <h3>Weekly Screening Volume</h3>
+                </div>
+                <div className="admin-analytics__chart-wrapper">
+                  <Line data={lineChartData} options={chartOptions} />
+                </div>
+              </div>
+
+              <div className="admin-analytics__card">
+                <div className="admin-analytics__card-header">
+                  <ShieldAlert size={18} className="admin-analytics__icon" />
+                  <h3>Risk Level Breakdown</h3>
+                </div>
+                <div className="admin-analytics__chart-wrapper admin-analytics__chart-wrapper--donut">
+                  <Doughnut
+                    data={doughnutChartData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                          labels: {
+                            color: '#111c1e',
+                            font: { family: 'Noto Sans', size: 11 },
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="admin-analytics__card admin-analytics__card--stat">
+                <div className="admin-analytics__card-header">
+                  <Clock size={18} className="admin-analytics__icon" />
+                  <h3>Doctor Triage Speed</h3>
+                </div>
+                <div className="admin-analytics__stat-value">14.2 min</div>
+                <p className="admin-analytics__stat-note">Avg response time from submission to doctor review</p>
+              </div>
+            </div>
+          </section>
+
           <div className="admin-dashboard__heading">
             <div>
               <p className="admin-dashboard__eyebrow">Medical Practitioner Approval</p>
@@ -124,9 +247,7 @@ export default function AdminDashboard() {
                 disabled={loading}
                 aria-label="Refresh doctor list"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
+                <RefreshCw size={18} />
               </button>
             </div>
           </div>
@@ -146,9 +267,7 @@ export default function AdminDashboard() {
           {!loading && !error && doctors.length === 0 && (
             <div className="admin-empty">
               <div className="admin-empty__icon-wrapper">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <CheckCircle2 size={40} />
               </div>
               <h2>All Caught Up!</h2>
               <p>There are currently no doctors waiting for registration approval.</p>
@@ -200,6 +319,7 @@ export default function AdminDashboard() {
                         className="admin-btn admin-btn--approve"
                         onClick={() => handleApprove(doctor)}
                         disabled={isApproving}
+                        aria-label={`Approve ${doctor.name || 'doctor'}`}
                       >
                         {isApproving ? (
                           <>
@@ -208,9 +328,7 @@ export default function AdminDashboard() {
                           </>
                         ) : (
                           <>
-                            <svg className="admin-btn__icon" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
+                            <UserCheck size={18} className="admin-btn__icon" />
                             Approve Doctor
                           </>
                         )}
