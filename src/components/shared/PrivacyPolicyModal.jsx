@@ -3,7 +3,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, ShieldCheck, Lock, FileText, Sparkles, UserCheck } from 'lucide-react';
 import './PrivacyPolicyModal.css';
 
-export default function PrivacyPolicyModal({ isOpen, onClose }) {
+export default function PrivacyPolicyModal({ isOpen, onClose, onAgree }) {
+  const handleAgree = () => {
+    if (onAgree) onAgree();
+    onClose();
+  };
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
@@ -92,7 +97,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
             </div>
 
             <div className="privacy-modal__footer">
-              <button type="button" className="btn btn-primary" onClick={onClose}>
+              <button type="button" className="btn btn-primary" onClick={handleAgree}>
                 I Understand & Agree
               </button>
             </div>
