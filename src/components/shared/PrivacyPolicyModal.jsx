@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ShieldCheck, Lock, FileText, UserCheck } from 'lucide-react';
+import { X, ShieldCheck, Lock, FileText, Sparkles, UserCheck } from 'lucide-react';
 import './PrivacyPolicyModal.css';
 
 export default function PrivacyPolicyModal({ isOpen, onClose }) {
@@ -74,7 +74,16 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
 
               <section className="privacy-modal__section">
                 <h3>
-                  <UserCheck size={16} aria-hidden="true" /> 3. Data Retention & Patient Rights
+                  <Sparkles size={16} aria-hidden="true" /> 3. AI Evaluation & De-identified Data Usage
+                </h3>
+                <p>
+                  By accepting this, you consent to your images/information being analyzed by AI software for detailed image screening and prelimimary examination.
+                </p>
+              </section>
+
+              <section className="privacy-modal__section">
+                <h3>
+                  <UserCheck size={16} aria-hidden="true" /> 4. Data Retention & Patient Rights
                 </h3>
                 <p>
                   Your screening records are retained securely to enable follow-up care and longitudinal tracking. You have the right to request a copy of your records or demand deletion at any time by contacting our support team.
