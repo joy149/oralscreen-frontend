@@ -77,7 +77,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
                   <Sparkles size={16} aria-hidden="true" /> 3. AI Evaluation & De-identified Data Usage
                 </h3>
                 <p>
-                  By accepting this, you consent to your images/information being analyzed by AI software for detailed image screening and prelimimary examination.
+                  By accepting this, you consent to your images/information being analyzed by AI software for detailed image screening and preliminary examination.
                 </p>
               </section>
 
