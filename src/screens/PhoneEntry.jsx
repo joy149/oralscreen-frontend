@@ -222,6 +222,7 @@ export default function PhoneEntry() {
           <PrivacyPolicyModal
             isOpen={showPrivacyModal}
             onClose={() => setShowPrivacyModal(false)}
+            onAgree={() => setAgreedToPrivacy(true)}
           />
         </div>
       </PageTransition>
