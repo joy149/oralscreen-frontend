@@ -60,7 +60,15 @@ export default function AssessmentPending() {
     'recommendedSpecialistDisplayName',
     'recommended_specialist_code',
   ]);
-  const patientSummary = findAssessmentField(assessment, ['patientFacingSummary']);
+  const patientSummary = findAssessmentField(assessment, ['patientFacingSummary', 'patient_facing_summary', 'summary']);
+  const homeCareRecommendations = findAssessmentField(assessment, [
+    'homeCareRecommendations',
+    'home_care_recommendations',
+    'homeCareTips',
+    'home_care_tips',
+    'homeCare',
+    'home_care',
+  ]);
 
   return (
     <AppShell step={3} totalSteps={3}>
@@ -82,7 +90,7 @@ export default function AssessmentPending() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.15, ease: [0.4, 0, 0.2, 1] }}
           >
-            <RiskBadge classification={riskClassification} />
+            <RiskBadge classification={riskClassification} recommendations={homeCareRecommendations} />
           </motion.div>
 
           {recommendedSpecialist && (

@@ -1,4 +1,5 @@
 import { ShieldCheck, AlertTriangle, AlertOctagon } from 'lucide-react';
+import HomeCareRecommendations from './HomeCareRecommendations';
 import './RiskBadge.css';
 
 const TIERS = [
@@ -26,7 +27,7 @@ const TIERS = [
  * Risk is a real ordinal scale (mild -> moderate -> high), so it's shown as
  * a position on a three-zone gauge with visual icon chips for accessible interpretation.
  */
-export default function RiskBadge({ classification, size = 'large' }) {
+export default function RiskBadge({ classification, recommendations, size = 'large' }) {
   const activeIndex = TIERS.findIndex((t) => t.key === classification);
   const tier = TIERS[activeIndex] ?? null;
   const ActiveIcon = tier?.icon;
@@ -66,6 +67,7 @@ export default function RiskBadge({ classification, size = 'large' }) {
           <p>{tier.guidance}</p>
         </div>
       )}
+      {size === 'large' && <HomeCareRecommendations recommendations={recommendations} />}
     </div>
   );
 }
