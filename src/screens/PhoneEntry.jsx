@@ -6,6 +6,7 @@ import PageTransition from '../components/shared/PageTransition';
 import { motion } from 'motion/react';
 import { api, ApiError } from '../api/client';
 import { usePatient } from '../context/PatientContext';
+import PrivacyPolicyModal from '../components/shared/PrivacyPolicyModal';
 import './PhoneEntry.css';
 
 export default function PhoneEntry() {
@@ -17,6 +18,8 @@ export default function PhoneEntry() {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [sex, setSex] = useState('');
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [sexOptions, setSexOptions] = useState([]);
   const [loadingSexOptions, setLoadingSexOptions] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -74,7 +77,7 @@ export default function PhoneEntry() {
 
   async function handleDetailsSubmit(e) {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !agreedToPrivacy) return;
     setError(null);
     setSubmitting(true);
     try {
@@ -83,6 +86,8 @@ export default function PhoneEntry() {
         name: name.trim(),
         age: age ? Number(age) : undefined,
         sex: sex || undefined,
+        consentGiven: true,
+        consentGivenAt: new Date().toISOString(),
       });
       setPatient(patient);
       navigate('/questionnaire');
@@ -189,11 +194,35 @@ export default function PhoneEntry() {
                   </select>
                 </div>
               </div>
-              <button type="submit" className="btn btn-primary" disabled={!name.trim() || submitting}>
+              <div className="phone-entry__privacy-consent">
+                <label className="phone-entry__checkbox-label" htmlFor="privacy-consent">
+                  <input
+                    type="checkbox"
+                    id="privacy-consent"
+                    checked={agreedToPrivacy}
+                    onChange={(e) => setAgreedToPrivacy(e.target.checked)}
+                  />
+                  <span>
+                    I agree to the{' '}
+                    <button
+                      type="button"
+                      className="phone-entry__privacy-link"
+                      onClick={() => setShowPrivacyModal(true)}
+                    >
+                      Terms of Service & Privacy Policy
+                    </button>
+                  </span>
+                </label>
+              </div>
+              <button type="submit" className="btn btn-primary" disabled={!name.trim() || !agreedToPrivacy || submitting}>
                 {submitting ? 'Please wait…' : 'Continue'}
               </button>
             </form>
           )}
+          <PrivacyPolicyModal
+            isOpen={showPrivacyModal}
+            onClose={() => setShowPrivacyModal(false)}
+          />
         </div>
       </PageTransition>
     </AppShell>
