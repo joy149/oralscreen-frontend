@@ -6,6 +6,7 @@ import PageTransition from '../components/shared/PageTransition';
 import { motion } from 'motion/react';
 import { api, ApiError } from '../api/client';
 import { usePatient } from '../context/PatientContext';
+import { ShieldCheck, Stethoscope, Clock, Sparkles } from 'lucide-react';
 import PrivacyPolicyModal from '../components/shared/PrivacyPolicyModal';
 import './PhoneEntry.css';
 
@@ -121,8 +122,27 @@ export default function PhoneEntry() {
           </div>
 
           <div className="phone-entry__intro">
+            <div className="phone-entry__hero-badge">
+              <Sparkles size={14} className="phone-entry__hero-icon" />
+              <span>Clinical AI Screening</span>
+            </div>
             <h1>Let's take a look</h1>
-            <p>Answer a few questions and share a photo. A dentist reviews every result.</p>
+            <p>Answer a few questions and share a photo. A licensed dentist reviews every result.</p>
+            
+            <div className="phone-entry__trust-badges">
+              <div className="phone-entry__trust-item">
+                <ShieldCheck size={15} />
+                <span>100% Private</span>
+              </div>
+              <div className="phone-entry__trust-item">
+                <Stethoscope size={15} />
+                <span>Dentist Verified</span>
+              </div>
+              <div className="phone-entry__trust-item">
+                <Clock size={15} />
+                <span>Under 2 Mins</span>
+              </div>
+            </div>
           </div>
 
           {stage === 'phone' && (

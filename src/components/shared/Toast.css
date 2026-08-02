@@ -80,11 +80,15 @@
   line-height: 1;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background var(--duration-fast) var(--ease-smooth);
+  transition: transform 160ms var(--ease-out), background 160ms var(--ease-out);
 }
 
 .toast__close:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.toast__close:active {
+  transform: scale(0.88);
 }
 
 /* ---------- Respect reduced motion ---------- */

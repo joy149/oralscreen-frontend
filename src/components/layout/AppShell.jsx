@@ -35,7 +35,7 @@ export default function AppShell({ children, step, totalSteps }) {
                 className="app-shell__progress-fill"
                 initial={false}
                 animate={{ width: `${((step - 1) / (totalSteps - 1)) * 100}%` }}
-                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
               />
             </div>
             {Array.from({ length: totalSteps }).map((_, i) => (

@@ -53,10 +53,18 @@
   --shadow-card-hover: 0 2px 8px rgba(23, 38, 42, 0.08), 0 8px 24px rgba(23, 38, 42, 0.06);
   --shadow-elevated: 0 4px 12px rgba(23, 38, 42, 0.10), 0 12px 36px rgba(23, 38, 42, 0.08);
 
-  /* Animation */
+  /* Animation & Easings */
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --duration-fast: 0.15s;
   --duration-normal: 0.25s;
+
+  /* Glassmorphism & Translucency Materials */
+  --glass-bg: rgba(251, 248, 243, 0.82);
+  --glass-border: rgba(228, 221, 208, 0.75);
+  --glass-blur: blur(16px) saturate(180%);
 
   /* Gradient accents */
   --gradient-primary: linear-gradient(135deg, #1f6f6b 0%, #2a9d8f 100%);

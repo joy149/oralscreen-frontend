@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://qualifier-pagan-unwatched.ngrok-free.dev';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://oralscreen-api.ap-south-1.elasticbeanstalk.com';
 
 function resolveApiUrl(url) {
   if (!url || /^https?:\/\//i.test(url)) return url || null;
