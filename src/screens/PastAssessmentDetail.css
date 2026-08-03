@@ -1,0 +1,77 @@
+.past-assessment-detail__back {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: var(--space-5);
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.past-assessment-detail__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.past-assessment-detail__heading p {
+  font-size: 0.8125rem;
+  color: var(--color-ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.past-assessment-detail__section {
+  margin-bottom: var(--space-4);
+}
+
+.past-assessment-detail__section h2 {
+  margin-bottom: var(--space-3);
+}
+
+.past-assessment-detail__section p {
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+}
+
+.past-assessment-detail__facts {
+  margin: var(--space-4) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.past-assessment-detail__facts dt {
+  font-size: 0.75rem;
+  color: var(--color-ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 2px;
+}
+
+.past-assessment-detail__facts dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-ink);
+}
+
+.past-assessment-detail__notes-text {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-line);
+  white-space: pre-wrap;
+}
+
+.past-assessment-detail__muted {
+  color: var(--color-ink-faint);
+}
+
+.past-assessment-detail__skeleton {
+  display: flex;
+  flex-direction: column;
+}

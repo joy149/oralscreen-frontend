@@ -1,36 +1,33 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { firebaseSignOut } from '../config/firebase';
 
 const STORAGE_KEY = 'oralscreen.doctorSession';
 const DoctorSessionContext = createContext(null);
 
+/**
+ * The doctor session holds **profile data only** — no token.
+ *
+ * It used to store the Firebase ID token captured once at login, and every doctor API call
+ * sent that stored copy. Firebase tokens expire in about an hour, so a doctor would be thrown
+ * back to the login screen mid-review. Tokens are now read fresh from the Firebase SDK on each
+ * request (see `api/client.js`), and the real proof of identity is the Firebase auth state,
+ * which `DoctorRoute` checks.
+ */
 function readStoredSession() {
   try {
     const value = JSON.parse(sessionStorage.getItem(STORAGE_KEY));
-    return value?.token ? value : null;
+    return value?.doctorId ? value : null;
   } catch (_) {
     sessionStorage.removeItem(STORAGE_KEY);
     return null;
   }
 }
 
-function decodeToken(token) {
-  try {
-    const payload = token.split('.')[1];
-    if (!payload) return {};
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(decodeURIComponent(escape(atob(base64))));
-  } catch (_) {
-    return {};
-  }
-}
-
-export function createDoctorSession(loginResponse) {
-  const token = loginResponse?.token;
-  const claims = decodeToken(token || '');
+export function createDoctorSession({ doctorId, name, phoneNumber } = {}) {
   return {
-    doctorId: loginResponse?.doctorId || loginResponse?.doctor?.id || claims.doctorId || claims.sub || '',
-    name: loginResponse?.name || loginResponse?.doctor?.name || claims.name || 'Doctor',
-    token,
+    doctorId: doctorId || '',
+    name: name || 'Doctor',
+    phoneNumber: phoneNumber || '',
   };
 }
 
@@ -45,6 +42,7 @@ export function DoctorSessionProvider({ children }) {
   const endSession = useCallback(() => {
     sessionStorage.removeItem(STORAGE_KEY);
     setSessionState(null);
+    firebaseSignOut();
   }, []);
 
   const value = useMemo(

@@ -1,0 +1,15 @@
+.patient-profile__intro {
+  margin-bottom: var(--space-5);
+}
+
+.patient-profile__intro p {
+  margin-top: var(--space-2);
+  color: var(--color-ink-faint);
+  font-size: 0.9375rem;
+}
+
+.patient-profile__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}

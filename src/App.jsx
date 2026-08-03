@@ -4,6 +4,9 @@ import PhoneEntry from './screens/PhoneEntry';
 import QuestionnaireForm from './screens/QuestionnaireForm';
 import PhotoUpload from './screens/PhotoUpload';
 import AssessmentPending from './screens/AssessmentPending';
+import PatientProfile from './screens/PatientProfile';
+import PastAssessments from './screens/PastAssessments';
+import PastAssessmentDetail from './screens/PastAssessmentDetail';
 import DoctorRoute from './components/doctor/DoctorRoute';
 import { DoctorSessionProvider } from './context/DoctorSessionContext';
 import DoctorLogin from './screens/doctor/DoctorLogin';
@@ -27,6 +30,9 @@ export default function App() {
           <Route path="/questionnaire/:questionnaireId" element={<QuestionnaireForm />} />
           <Route path="/questionnaire/:questionnaireId/photos" element={<PhotoUpload />} />
           <Route path="/questionnaire/:questionnaireId/assessment" element={<AssessmentPending />} />
+          <Route path="/profile" element={<PatientProfile />} />
+          <Route path="/assessments" element={<PastAssessments />} />
+          <Route path="/assessments/:assessmentId" element={<PastAssessmentDetail />} />
           <Route path="/doctor/admin" element={<AdminDashboard />} />
           <Route path="/doctor/login" element={<DoctorLogin />} />
           <Route element={<DoctorRoute />}>

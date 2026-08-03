@@ -6,3 +6,15 @@ dist
 .DS_Store
 docs
 .agents
+
+# Keys and certificates — every VITE_* var is inlined into the bundle at build time,
+# so nothing secret belongs in .env either. See docs/09_FRONTEND_AUTH_CHANGES.md.
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# Build artifacts and installers that landed in the repo root
+app-build.zip
+*.pkg

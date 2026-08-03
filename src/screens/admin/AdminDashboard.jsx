@@ -5,7 +5,8 @@ import PageTransition from '../../components/shared/PageTransition';
 import ErrorState from '../../components/shared/ErrorState';
 import { QueueSkeleton } from '../../components/shared/Skeleton';
 import { useToast } from '../../components/shared/Toast';
-import { RefreshCw, CheckCircle2, UserCheck, TrendingUp, ShieldAlert, Clock } from 'lucide-react';
+import { RefreshCw, CheckCircle2, UserCheck, TrendingUp, ShieldAlert, Clock, Lock, LogOut } from 'lucide-react';
+import { readAdminKey, saveAdminKey, clearAdminKey } from '../../config/adminKey';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -72,7 +73,10 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const adminKey = import.meta.env.VITE_ADMIN_KEY || '';
+  // Typed at runtime, never compiled into the bundle. See src/config/adminKey.js.
+  const [adminKey, setAdminKey] = useState(readAdminKey);
+  const [keyInput, setKeyInput] = useState('');
+  const [unlockError, setUnlockError] = useState('');
 
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,14 +132,26 @@ export default function AdminDashboard() {
   };
 
   const loadPendingDoctors = useCallback(async () => {
+    if (!adminKey) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const payload = await api.getPendingDoctors(adminKey);
-      const list = extractDoctorsList(payload);
-      setDoctors(list);
+      setDoctors(extractDoctorsList(payload));
     } catch (err) {
-      setError(err);
+      // A rejected key is not a page error — send the admin back to the unlock form, showing
+      // the server's own message. Anything else (including a 503 for an unconfigured
+      // ADMIN_API_KEY) is a server-side problem: keep the key, show the message as-is.
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        clearAdminKey();
+        setAdminKey('');
+        setUnlockError(err.message || 'That key was rejected.');
+      } else {
+        setError(err);
+      }
     } finally {
       setLoading(false);
     }
@@ -144,6 +160,23 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadPendingDoctors();
   }, [loadPendingDoctors]);
+
+  const handleUnlock = (event) => {
+    event.preventDefault();
+    const key = keyInput.trim();
+    if (!key) return;
+    saveAdminKey(key);
+    setAdminKey(key);
+    setKeyInput('');
+    setUnlockError('');
+  };
+
+  const handleLock = () => {
+    clearAdminKey();
+    setAdminKey('');
+    setDoctors([]);
+    setUnlockError('');
+  };
 
   const handleApprove = async (doctor) => {
     if (!doctor.id || approvingIds.has(doctor.id)) return;
@@ -166,17 +199,62 @@ export default function AdminDashboard() {
     }
   };
 
+  const header = (
+    <header className="admin-shell__header">
+      <div className="admin-shell__brand" onClick={() => navigate('/')} role="button" tabIndex={0}>
+        <img src={oralscreenLogo} alt="OralScreen" className="admin-shell__logo" />
+        <div className="admin-shell__title-group">
+          <span className="admin-shell__title">OralScreen</span>
+          <span className="admin-shell__badge">Admin Console</span>
+        </div>
+      </div>
+      {adminKey && (
+        <button type="button" className="admin-refresh-btn" onClick={handleLock} aria-label="Lock console">
+          <LogOut size={18} />
+        </button>
+      )}
+    </header>
+  );
+
+  // Nothing loads — and nothing is revealed — until a key is supplied. The key is the gate;
+  // the backend enforces it, this form just collects it.
+  if (!adminKey) {
+    return (
+      <div className="admin-shell">
+        {header}
+        <main className="admin-main">
+          <PageTransition>
+            <div className="admin-empty">
+              <div className="admin-empty__icon-wrapper">
+                <Lock size={40} />
+              </div>
+              <h2>Admin key required</h2>
+              <p>Enter the admin API key to manage doctor approvals.</p>
+              <form onSubmit={handleUnlock} className="admin-unlock-form">
+                <input
+                  type="password"
+                  value={keyInput}
+                  onChange={(e) => setKeyInput(e.target.value)}
+                  placeholder="Admin API key"
+                  autoComplete="off"
+                  aria-label="Admin API key"
+                  autoFocus
+                />
+                <button type="submit" className="admin-btn admin-btn--approve" disabled={!keyInput.trim()}>
+                  Unlock
+                </button>
+              </form>
+              {unlockError && <p className="error-text">{unlockError}</p>}
+            </div>
+          </PageTransition>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-shell">
-      <header className="admin-shell__header">
-        <div className="admin-shell__brand" onClick={() => navigate('/')} role="button" tabIndex={0}>
-          <img src={oralscreenLogo} alt="OralScreen" className="admin-shell__logo" />
-          <div className="admin-shell__title-group">
-            <span className="admin-shell__title">OralScreen</span>
-            <span className="admin-shell__badge">Admin Console</span>
-          </div>
-        </div>
-      </header>
+      {header}
 
       <main className="admin-main">
         <PageTransition>

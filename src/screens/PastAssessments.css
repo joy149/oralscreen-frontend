@@ -1,0 +1,79 @@
+.past-assessments__intro {
+  margin-bottom: var(--space-5);
+}
+
+.past-assessments__intro p {
+  margin-top: var(--space-2);
+  color: var(--color-ink-faint);
+  font-size: 0.9375rem;
+}
+
+.past-assessments__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.past-assessments__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--color-line);
+  transition: box-shadow var(--duration-normal) var(--ease-smooth),
+    border-color var(--duration-normal) var(--ease-smooth);
+}
+
+.past-assessments__row:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.past-assessments__row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.past-assessments__row-main strong {
+  font-size: 0.9375rem;
+}
+
+.past-assessments__row-main .is-reviewed,
+.past-assessments__row-main .is-awaiting {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+}
+
+.past-assessments__row-main .is-reviewed { color: var(--color-ink-soft); }
+.past-assessments__row-main .is-awaiting { color: var(--color-ink-faint); }
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.is-reviewed .status-dot { background: var(--color-success); }
+.is-awaiting .status-dot { background: var(--color-risk-moderate); }
+
+.past-assessments__empty {
+  text-align: center;
+  padding: var(--space-7) var(--space-5);
+}
+
+.past-assessments__empty h2 {
+  margin-bottom: var(--space-2);
+}
+
+.past-assessments__empty p {
+  color: var(--color-ink-faint);
+  margin-bottom: var(--space-5);
+}

@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import ErrorState from '../components/shared/ErrorState';
 import PageTransition from '../components/shared/PageTransition';
+import OtpInput from '../components/shared/OtpInput';
 import { motion } from 'motion/react';
 import { api, ApiError } from '../api/client';
 import { usePatient } from '../context/PatientContext';
-import { ShieldCheck, Stethoscope, Clock, Sparkles } from 'lucide-react';
+import { ShieldCheck, Stethoscope, Clock, Sparkles, ArrowLeft } from 'lucide-react';
 import PrivacyPolicyModal from '../components/shared/PrivacyPolicyModal';
+import { setupRecaptcha, sendFirebasePhoneOtp, formatE164Phone } from '../config/firebase';
 import './PhoneEntry.css';
 
 export default function PhoneEntry() {
@@ -15,7 +17,9 @@ export default function PhoneEntry() {
   const { setPatient } = usePatient();
 
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [stage, setStage] = useState('phone'); // 'phone' | 'details'
+  const [stage, setStage] = useState('phone'); // 'phone' | 'otp' | 'details'
+  const [otpError, setOtpError] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState(null);
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [sex, setSex] = useState('');
@@ -56,21 +60,66 @@ export default function PhoneEntry() {
     };
   }, []);
 
+  useEffect(() => {
+    // Initialize invisible reCAPTCHA container
+    try {
+      setupRecaptcha('recaptcha-container');
+    } catch (_) {
+      // ignore
+    }
+  }, []);
+
+  async function sendOtpCode() {
+    setError(null);
+    setOtpError('');
+    setSubmitting(true);
+    try {
+      // Re-initialize RecaptchaVerifier for clean state
+      const verifier = setupRecaptcha('recaptcha-container');
+      const result = await sendFirebasePhoneOtp(phoneNumber.trim(), verifier);
+      setConfirmationResult(result);
+      setStage('otp');
+    } catch (err) {
+      console.error('Firebase SMS OTP error:', err);
+      const message = err?.message || 'Failed to send SMS OTP.';
+      setOtpError(`SMS Error: ${message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function handlePhoneSubmit(e) {
     e.preventDefault();
     if (!isPhoneValid) return;
-    setError(null);
+    await sendOtpCode();
+  }
+
+  async function handleVerifyOtp(otpCode) {
+    setOtpError('');
     setSubmitting(true);
     try {
-      const patient = await api.findOrCreatePatient({ phoneNumber: phoneNumber.trim() });
-      setPatient(patient);
-      navigate('/questionnaire');
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 404) {
-        setStage('details');
-      } else {
-        setError(err);
+      // Verify OTP with Firebase
+      if (!confirmationResult || !confirmationResult.confirm) {
+        throw new Error('OTP session expired. Please request a new code.');
       }
+      await confirmationResult.confirm(otpCode);
+
+      // Fetch or create patient profile after OTP verification.
+      // The server uses the token's phone regardless, but send the canonical form so the
+      // two can never disagree if that ever changes.
+      try {
+        const patient = await api.findOrCreatePatient({ phoneNumber: formatE164Phone(phoneNumber.trim()) });
+        setPatient(patient);
+        navigate('/questionnaire');
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          setStage('details');
+        } else {
+          setError(err);
+        }
+      }
+    } catch (err) {
+      setOtpError(err?.message || 'Invalid or expired OTP code. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -83,7 +132,7 @@ export default function PhoneEntry() {
     setSubmitting(true);
     try {
       const patient = await api.findOrCreatePatient({
-        phoneNumber: phoneNumber.trim(),
+        phoneNumber: formatE164Phone(phoneNumber.trim()),
         name: name.trim(),
         age: age ? Number(age) : undefined,
         sex: sex || undefined,
@@ -111,6 +160,8 @@ export default function PhoneEntry() {
     <AppShell>
       <PageTransition>
         <div className="screen phone-entry">
+          <div id="recaptcha-container"></div>
+
           <div className="phone-entry__role-switch" aria-label="Choose login type">
             <button type="button" className="is-active" aria-pressed="true">
               Patient
@@ -160,14 +211,36 @@ export default function PhoneEntry() {
                   aria-invalid={phoneNumber.length > 0 && !isPhoneValid}
                   aria-describedby="phone-hint"
                 />
-                <span id="phone-hint" className="sr-only" style={{ display: 'none' }}>
-                  Please enter a valid 10-digit mobile number.
-                </span>
               </div>
               <button type="submit" className="btn btn-primary" disabled={!isPhoneValid || submitting}>
-                {submitting ? 'Please wait…' : 'Continue'}
+                {submitting ? 'Sending OTP…' : 'Send Verification OTP'}
               </button>
             </form>
+          )}
+
+          {stage === 'otp' && (
+            <div className="card phone-entry__otp-card">
+              <button
+                type="button"
+                className="phone-entry__back-btn"
+                onClick={() => setStage('phone')}
+              >
+                <ArrowLeft size={16} /> Change mobile number
+              </button>
+              <div className="phone-entry__otp-header">
+                <h2>Enter 6-digit OTP</h2>
+                <p>Sent via SMS to <strong>+91 {phoneNumber}</strong></p>
+              </div>
+
+              <OtpInput
+                length={6}
+                submitting={submitting}
+                onComplete={handleVerifyOtp}
+                onResend={sendOtpCode}
+              />
+
+              {otpError && <p className="error-text text-center">{otpError}</p>}
+            </div>
           )}
 
           {stage === 'details' && (

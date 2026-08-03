@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { WifiOff } from 'lucide-react';
+import { usePatient } from '../../context/PatientContext';
+import AccountMenu from './AccountMenu';
 import oralscreenLogo from '../../assets/oralscreen_icon.jpg';
 import './AppShell.css';
 
@@ -9,6 +11,7 @@ const HOSPITAL_NAME = import.meta.env.VITE_HOSPITAL_NAME || '[Hospital Name]';
 
 export default function AppShell({ children, step, totalSteps }) {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const { patient } = usePatient();
 
   useEffect(() => {
     function handleOnline() { setIsOffline(false); }
@@ -48,6 +51,7 @@ export default function AppShell({ children, step, totalSteps }) {
             ))}
           </div>
         )}
+        {patient && <AccountMenu />}
       </header>
       {isOffline && (
         <div className="app-shell__offline-banner" role="status" aria-live="polite">

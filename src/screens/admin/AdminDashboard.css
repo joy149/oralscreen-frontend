@@ -467,3 +467,26 @@
 .admin-state {
   margin-top: var(--space-6, 32px);
 }
+
+/* Admin key unlock form — the key is typed at runtime, never bundled.
+   See src/config/adminKey.js. */
+.admin-unlock-form {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.admin-unlock-form input {
+  min-width: min(280px, 100%);
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.admin-unlock-form input:focus-visible {
+  outline: 2px solid #1f6f6b;
+  outline-offset: 1px;
+}

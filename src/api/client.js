@@ -1,11 +1,18 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://oralscreen-api.ap-south-1.elasticbeanstalk.com';
+import { getFirebaseToken } from '../config/firebase';
+
+// https only — Firebase ID tokens, questionnaire answers and photos all cross this link.
+const DEFAULT_BASE_URL = 'https://oralscreen-api.ap-south-1.elasticbeanstalk.com';
+const BASE_URL = import.meta.env.PROD
+  ? (import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL)
+  : '';
 
 function resolveApiUrl(url) {
   if (!url || /^https?:\/\//i.test(url)) return url || null;
-  return `${BASE_URL}${url.startsWith('/') ? url : `/${url}`}`;
+  const normalizedPath = url.startsWith('/') ? url : `/${url}`;
+  return `${BASE_URL}${normalizedPath}`;
 }
 
-const DEFAULT_SEX_OPTIONS = [,
+const DEFAULT_SEX_OPTIONS = [
   { value: 'MALE', label: 'Male' },
   { value: 'FEMALE', label: 'Female' },
   { value: 'TRANSGENDER', label: 'Transgender' },
@@ -31,37 +38,61 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * The API returns its message under `message` (GlobalExceptionHandler) or `error`
+ * (the security filter chain and the 401 paths). Read both — only checking `message`
+ * silently discarded every auth error and replaced it with "Request failed with status N".
+ */
 function errorMessage(body, fallback) {
   if (Array.isArray(body?.issues) && body.issues.length > 0) {
     return `${body.issues.join('. ')}. Please take and upload a clearer, well-lit photo.`;
   }
 
-  return body?.message || fallback;
+  return body?.message || body?.error || fallback;
 }
 
+async function parseErrorBody(res) {
+  try {
+    return await res.json();
+  } catch (_) {
+    // Not JSON (an HTML error page, or an empty body) — the caller still gets the status.
+    return null;
+  }
+}
+
+/**
+ * Every call attaches a **freshly read** Firebase ID token. The SDK caches and auto-refreshes,
+ * so this is cheap, and it means no caller can pin a token that expires mid-session.
+ *
+ * `authHeader` is spread last on purpose: it previously came before `options.headers`, which
+ * let callers passing a stored token silently override the fresh one.
+ */
 async function request(path, options = {}) {
   const isFormData = options.body instanceof FormData;
   const mandatoryHeaders = {
     'ngrok-skip-browser-warning': '69420',
   };
-  const res = await fetch(`${BASE_URL}${path}`, {
+
+  const skipAuth = options.skipAuth === true;
+  const firebaseToken = skipAuth ? null : await getFirebaseToken();
+  const authHeader = firebaseToken ? { Authorization: `Bearer ${firebaseToken}` } : {};
+
+  const baseHeaders = isFormData ? {} : { 'Content-Type': 'application/json' };
+
+  const res = await fetch(resolveApiUrl(path), {
     ...options,
-    headers: isFormData
-      ? { ...mandatoryHeaders, ...options.headers }
-      : { 
-          'Content-Type': 'application/json', 
-          ...mandatoryHeaders, 
-          ...(options.headers || {}) 
-        },
+    headers: {
+      ...baseHeaders,
+      ...mandatoryHeaders,
+      ...(options.headers || {}),
+      ...authHeader,
+    },
   });
 
   if (!res.ok) {
-    let body = null;
-    try {
-      body = await res.json();
-    } catch (_) {
-      // response wasn't JSON (e.g. a raw 500 stack trace) — swallow it,
-      // the caller still gets a usable ApiError with a status code.
+    const body = await parseErrorBody(res);
+    if (import.meta.env.DEV) {
+      console.error(`[API] ${options.method || 'GET'} ${path} failed:`, res.status, body);
     }
     throw new ApiError(
       errorMessage(body, `Request failed with status ${res.status}`),
@@ -75,45 +106,32 @@ async function request(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
-function doctorRequest(path, token, options = {}) {
-  return request(path, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
+/**
+ * Admin calls carry the key the admin typed. There is no environment-variable fallback —
+ * that is what put the key in the shipped bundle.
+ */
 function adminRequest(path, adminKey, options = {}) {
-  const key = adminKey || import.meta.env.VITE_ADMIN_KEY || '';
-  const headers = {
-    ...(options.headers || {}),
-  };
-  if (key) {
-    headers['X-Admin-Key'] = key;
+  if (!adminKey) {
+    throw new ApiError('Admin key required', 401, null);
   }
   return request(path, {
     ...options,
-    headers,
+    headers: { ...(options.headers || {}), 'X-Admin-Key': adminKey },
   });
 }
 
-async function doctorBlobRequest(path, token) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 
-      Authorization: `Bearer ${token}`,
-      'ngrok-skip-browser-warning': '69420' 
+/** Binary fetch (images). Same fresh-token rule as `request`. */
+async function blobRequest(path) {
+  const firebaseToken = await getFirebaseToken();
+  const res = await fetch(resolveApiUrl(path), {
+    headers: {
+      'ngrok-skip-browser-warning': '69420',
+      ...(firebaseToken ? { Authorization: `Bearer ${firebaseToken}` } : {}),
     },
   });
 
   if (!res.ok) {
-    let body = null;
-    try {
-      body = await res.json();
-    } catch (_) {
-      // Binary endpoints may return an empty or plain-text error body.
-    }
+    const body = await parseErrorBody(res);
     throw new ApiError(
       errorMessage(body, `Request failed with status ${res.status}`),
       res.status,
@@ -130,7 +148,9 @@ async function doctorBlobRequest(path, token) {
  * upload DTO ({ id, questionnaireId, storageKey, imageQualityStatus,
  * uploadedAt }), or rejecting with an ApiError.
  */
-function uploadImage(questionnaireId, file, onProgress) {
+async function uploadImage(questionnaireId, file, onProgress) {
+  const firebaseToken = await getFirebaseToken();
+
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
@@ -170,11 +190,14 @@ function uploadImage(questionnaireId, file, onProgress) {
       reject(new ApiError('Network error during upload', 0));
     });
 
-    xhr.open('POST', `${BASE_URL}/api/questionnaires/${questionnaireId}/images`);
-    
-    // Add the ngrok header here, AFTER open() and BEFORE send()
+    xhr.open('POST', resolveApiUrl(`/api/questionnaires/${questionnaireId}/images`));
+
+    // Add headers AFTER open() and BEFORE send()
     xhr.setRequestHeader('ngrok-skip-browser-warning', '69420');
-    
+    if (firebaseToken) {
+      xhr.setRequestHeader('Authorization', `Bearer ${firebaseToken}`);
+    }
+
     xhr.send(formData);
   });
 }
@@ -182,32 +205,27 @@ function uploadImage(questionnaireId, file, onProgress) {
 export const api = {
   /**
    * Find-or-create by phone number.
-   * Expected backend contract (per phone-only login decision):
-   *  - { phoneNumber } only, patient exists  -> 200 with Patient
-   *  - { phoneNumber } only, patient missing -> 404 with { code: 'PATIENT_NOT_FOUND' }
-   *  - { phoneNumber, name, age?, sex? }, patient missing -> 201 created Patient
-   * Adjust the 404/code check below if the backend contract ends up different.
+   *
+   * The server takes the phone from the verified Firebase token and ignores whatever is in
+   * the body, so the two can never disagree. Contract:
+   *  - no name, patient exists  -> 200 with Patient
+   *  - no name, patient missing -> 404 with { code: 'PATIENT_NOT_FOUND' }
+   *  - with name, patient missing -> 201 created Patient
    */
   findOrCreatePatient: (data) =>
     request('/api/patients', { method: 'POST', body: JSON.stringify(data) }),
 
   getPatient: (id) => request(`/api/patients/${id}`),
 
+  getPatientAssessments: (id) => request(`/api/patients/${id}/assessments`),
+
   getSexOptions: async () => {
-    const candidates = ['/api/patients/gender/options'];
-
-    for (const path of candidates) {
-      try {
-        const payload = await request(path);
-        return normalizeOptionsPayload(payload);
-      } catch (err) {
-        if (!(err instanceof ApiError) || err.status !== 404) {
-          throw err;
-        }
-      }
+    try {
+      return normalizeOptionsPayload(await request('/api/patients/gender/options'));
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) return DEFAULT_SEX_OPTIONS;
+      throw err;
     }
-
-    return DEFAULT_SEX_OPTIONS;
   },
 
   submitQuestionnaire: (data) =>
@@ -225,11 +243,11 @@ export const api = {
 
   getAssessment: (id) => request(`/api/assessments/${id}`),
 
-  checkDoctor: (phoneNumber) =>
-    request('/api/doctor/auth/check', {
-      method: 'POST',
-      body: JSON.stringify({ phoneNumber }),
-    }),
+  // --- doctor ---------------------------------------------------------------
+  // All of these read the phone from the verified token; nothing is sent in the body.
+  // None take a token argument any more — see the note on `request`.
+
+  checkDoctor: () => request('/api/doctor/auth/check', { method: 'POST' }),
 
   getDoctor: (doctorId) => request(`/api/doctors/${doctorId}`),
 
@@ -239,43 +257,26 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  loginDoctor: (phoneNumber) =>
-    request('/api/doctor/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ phoneNumber }),
-    }),
+  loginDoctor: () => request('/api/doctor/auth/login', { method: 'POST' }),
 
-  getDoctorQueue: (token) => doctorRequest('/api/doctor/queue', token),
+  getDoctorQueue: () => request('/api/doctor/queue'),
 
-  getDoctorAssessment: (id, token) =>
-    doctorRequest(`/api/assessments/${id}`, token),
+  getDoctorAssessment: (id) => request(`/api/assessments/${id}`),
 
-  getDoctorImageBlob: (imageId, token) =>
-    doctorBlobRequest(`/api/images/${imageId}/content`, token),
+  getDoctorImageBlob: (imageId) => blobRequest(`/api/images/${imageId}/content`),
 
-  submitDoctorReview: (id, data, token) =>
-    doctorRequest(`/api/doctor/assessments/${id}/review`, token, {
+  submitDoctorReview: (id, data) =>
+    request(`/api/doctor/assessments/${id}/review`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  getPendingDoctors: (adminKey) =>
-    adminRequest('/api/admin/doctors', adminKey),
+  // --- admin ----------------------------------------------------------------
 
-  approveDoctor: async (doctorId, adminKey) => {
-    try {
-      return await adminRequest(`/api/admin/doctors/${doctorId}/approve`, adminKey, {
-        method: 'POST',
-      });
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 404) {
-        return await adminRequest(`/api/admin/${doctorId}/approve`, adminKey, {
-          method: 'POST',
-        });
-      }
-      throw err;
-    }
-  },
+  getPendingDoctors: (adminKey) => adminRequest('/api/admin/doctors', adminKey),
+
+  approveDoctor: (doctorId, adminKey) =>
+    adminRequest(`/api/admin/doctors/${doctorId}/approve`, adminKey, { method: 'POST' }),
 
   resolveApiUrl,
 };

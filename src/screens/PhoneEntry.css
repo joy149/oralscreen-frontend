@@ -165,3 +165,43 @@
 .phone-entry__privacy-link:hover {
   color: var(--color-primary-dark);
 }
+
+.phone-entry__otp-card {
+  text-align: center;
+}
+
+.phone-entry__back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-ink-soft);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: var(--space-3);
+  transition: color 140ms var(--ease-out);
+}
+
+.phone-entry__back-btn:hover {
+  color: var(--color-primary);
+}
+
+.phone-entry__otp-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.phone-entry__otp-header p {
+  font-size: 0.875rem;
+  color: var(--color-ink-soft);
+  margin-top: var(--space-1);
+}
+
+.text-center {
+  text-align: center;
+}
+

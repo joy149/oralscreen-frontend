@@ -52,7 +52,7 @@ function confidenceLabel(value) {
   return `${Math.round(numeric <= 1 ? numeric * 100 : numeric)}%`;
 }
 
-function DoctorImage({ image, index, token, onOpen, onRequestError }) {
+function DoctorImage({ image, index, onOpen, onRequestError }) {
   const directSource = directImageSource(image);
   const [src, setSrc] = useState(directSource);
   const [failed, setFailed] = useState(false);
@@ -62,7 +62,7 @@ function DoctorImage({ image, index, token, onOpen, onRequestError }) {
     let active = true;
     let objectUrl = null;
 
-    api.getDoctorImageBlob(image.id, token)
+    api.getDoctorImageBlob(image.id)
       .then((blob) => {
         if (!active) return;
         objectUrl = URL.createObjectURL(blob);
@@ -79,7 +79,7 @@ function DoctorImage({ image, index, token, onOpen, onRequestError }) {
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [directSource, image?.id, onRequestError, token]);
+  }, [directSource, image?.id, onRequestError]);
 
   if (failed || (!src && !image?.id)) {
     return <div className="doctor-case__image-missing">Image unavailable</div>;
@@ -101,7 +101,7 @@ export default function DoctorCase() {
   const { assessmentId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { session, endSession } = useDoctorSession();
+  const { endSession } = useDoctorSession();
   const toast = useToast();
   const queueAssessment = location.state?.assessment || null;
   const [assessment, setAssessment] = useState(queueAssessment);
@@ -118,8 +118,9 @@ export default function DoctorCase() {
   const [compareImage, setCompareImage] = useState(null);
   const [showReasoning, setShowReasoning] = useState(false);
 
+  // 401 only — see the note in DoctorQueue. A 403 is a permission message, not an expiry.
   const handleAuthError = useCallback((err) => {
-    if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+    if (err instanceof ApiError && err.status === 401) {
       endSession();
       navigate('/doctor/login', { replace: true });
       return true;
@@ -131,7 +132,7 @@ export default function DoctorCase() {
     setLoading(true);
     setError(null);
     try {
-      const result = unwrapAssessment(await api.getDoctorAssessment(assessmentId, session.token));
+      const result = unwrapAssessment(await api.getDoctorAssessment(assessmentId));
       setAssessment((current) => ({ ...current, ...result }));
       setRisk(result.doctorRiskClassification || result.doctorReview?.doctorRiskClassification || '');
       setNotes(result.doctorNotes || result.doctorReview?.doctorNotes || '');
@@ -140,7 +141,7 @@ export default function DoctorCase() {
     } finally {
       setLoading(false);
     }
-  }, [assessmentId, handleAuthError, session.token]);
+  }, [assessmentId, handleAuthError]);
 
   useEffect(() => { loadAssessment(); }, [loadAssessment]);
 
@@ -201,7 +202,7 @@ export default function DoctorCase() {
       const result = unwrapAssessment(await api.submitDoctorReview(assessmentId, {
         doctorRiskClassification: risk,
         doctorNotes: notes.trim(),
-      }, session.token));
+      }));
       setAssessment((current) => ({ ...current, ...result, doctorRiskClassification: risk, doctorNotes: notes.trim() }));
       setSaved(true);
       toast.success('Review saved successfully');
@@ -283,7 +284,6 @@ export default function DoctorCase() {
                         key={image.id || directImageSource(image) || index}
                         image={image}
                         index={index}
-                        token={session.token}
                         onOpen={setActiveImage}
                         onRequestError={handleAuthError}
                       />
