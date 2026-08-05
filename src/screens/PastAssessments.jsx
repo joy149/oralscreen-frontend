@@ -75,11 +75,10 @@ export default function PastAssessments() {
   }
 
   return (
-    <AppShell>
+    <AppShell back title="Past assessments">
       <PageTransition>
         <div className="screen past-assessments">
           <div className="past-assessments__intro">
-            <h1>Past assessments</h1>
             <p>Every screening you've submitted, and your doctor's review once it's in.</p>
           </div>
 

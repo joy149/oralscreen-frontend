@@ -7,7 +7,7 @@ import PageTransition from '../components/shared/PageTransition';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../api/client';
 import { useToast } from '../components/shared/Toast';
-import { Camera, ImagePlus, RefreshCw, Info, Sparkles } from 'lucide-react';
+import { Camera, ImagePlus, RefreshCw, Info, Check } from 'lucide-react';
 import './PhotoUpload.css';
 
 let nextId = 0;
@@ -190,12 +190,16 @@ export default function PhotoUpload() {
     };
   }, [questionnaireId]);
 
-  const addFiles = useCallback((files) => {
+  // `angle` tags a photo with the screening view it covers, which is what the
+  // capture checklist reads to show progress. Library picks arrive untagged —
+  // they still upload, they just don't tick a specific slot.
+  const addFiles = useCallback((files, angle = null) => {
     if (files.length === 0) return;
 
     const newItems = files.map((file) => ({
       id: nextId++,
       file,
+      angle,
       previewUrl: URL.createObjectURL(file),
       localPreview: true,
       status: 'queued',
@@ -246,8 +250,9 @@ export default function PhotoUpload() {
       });
   }, [cameraStream]);
 
-  async function openCamera(mode = facingMode) {
+  async function openCamera(mode = facingMode, angle = null) {
     setCameraError(null);
+    if (angle) setSelectedAngle(angle);
     if (!navigator.mediaDevices?.getUserMedia) {
       cameraInputRef.current?.click();
       return;
@@ -295,8 +300,8 @@ export default function PhotoUpload() {
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         navigator.vibrate(50);
       }
-      const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
-      addFiles([file]);
+      const file = new File([blob], `${selectedAngle}-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      addFiles([file], selectedAngle);
       closeCamera();
     }, 'image/jpeg', 0.92);
   }
@@ -325,6 +330,29 @@ export default function PhotoUpload() {
   const hasInFlight = visibleItems.some((it) => it.status === 'uploading' || it.status === 'queued');
   const hasFailed = visibleItems.some((it) => it.status === 'failed');
   const canContinue = successCount > 0 && !hasInFlight && !hasFailed;
+
+  // A photo counts toward an angle as soon as it's captured, so the checklist
+  // ticks immediately rather than waiting on the upload round-trip.
+  const captureByAngle = SCREENING_ANGLES.reduce((acc, angle) => {
+    acc[angle.id] = visibleItems.find(
+      (it) => it.angle === angle.id && it.status !== 'failed'
+    ) || null;
+    return acc;
+  }, {});
+  const capturedAngles = SCREENING_ANGLES.filter((a) => captureByAngle[a.id]).length;
+
+  function continueLabel() {
+    if (assessing) return 'Running assessment…';
+    if (successCount === 0) return 'Continue';
+    return `Continue with ${successCount} photo${successCount === 1 ? '' : 's'}`;
+  }
+
+  function requirementText() {
+    if (hasInFlight) return 'Waiting for uploads to finish…';
+    if (hasFailed) return 'Re-upload or remove the failed photos before continuing.';
+    if (successCount === 0) return 'Capture at least one photo to continue.';
+    return null;
+  }
 
   async function handleContinue() {
     setAssessError(null);
@@ -360,9 +388,9 @@ export default function PhotoUpload() {
     <AppShell step={2} totalSteps={3}>
       <PageTransition>
         <div className="screen photo-upload">
-          <h1>Add a photo</h1>
+          <h1>Add your photos</h1>
           <p className="photo-upload__subhead">
-            Clear, well-lit photos help the AI and the doctor see what you're seeing.
+            Four angles give the dentist the clearest picture. One photo is enough to continue.
           </p>
 
           <input
@@ -384,16 +412,55 @@ export default function PhotoUpload() {
             id="photo-camera-input"
           />
 
-          <div className="photo-upload__pickers">
-            <button type="button" className="photo-upload__picker" onClick={() => openCamera('environment')}>
-              <Camera size={28} className="photo-upload__picker-icon" />
-              <span>Take a photo</span>
-            </button>
-            <label htmlFor="photo-library-input" className="photo-upload__picker">
-              <ImagePlus size={28} className="photo-upload__picker-icon" />
-              <span>Choose photos</span>
-            </label>
-          </div>
+          {/* The four screening angles used to exist only inside the camera
+              overlay, so the main screen gave no sense of what "done" meant.
+              Surfacing them as a checklist turns this into a completable task
+              and improves the photo set the model receives. */}
+          {!cameraStream && (
+            <section className="photo-upload__angles" aria-labelledby="angles-heading">
+              <div className="photo-upload__angles-head">
+                <h2 id="angles-heading">Capture 4 angles</h2>
+                <span className="photo-upload__angles-count">{capturedAngles} of {SCREENING_ANGLES.length}</span>
+              </div>
+
+              <ul className="photo-upload__angle-grid">
+                {SCREENING_ANGLES.map((angle) => {
+                  const captured = captureByAngle[angle.id];
+                  return (
+                    <li key={angle.id}>
+                      <button
+                        type="button"
+                        className={`photo-upload__angle-slot${captured ? ' is-captured' : ''}`}
+                        onClick={() => openCamera('environment', angle.id)}
+                      >
+                        <span className="photo-upload__angle-thumb">
+                          {captured ? (
+                            <>
+                              <img src={captured.previewUrl} alt="" />
+                              <span className="photo-upload__angle-check" aria-hidden="true">
+                                <Check size={14} />
+                              </span>
+                            </>
+                          ) : (
+                            <Camera size={20} aria-hidden="true" />
+                          )}
+                        </span>
+                        <span className="photo-upload__angle-label">{angle.label}</span>
+                        <span className="photo-upload__angle-state">
+                          {captured ? 'Retake' : 'Capture'}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <label htmlFor="photo-library-input" className="photo-upload__library">
+                <ImagePlus size={16} aria-hidden="true" />
+                <span>Or choose photos from your gallery</span>
+              </label>
+            </section>
+          )}
 
           {cameraStream && (
             <div
@@ -484,28 +551,30 @@ export default function PhotoUpload() {
             </div>
           )}
 
-          {hasFailed && (
-            <p className="photo-upload__hint">
-              One or more photos could not be uploaded. Please re-upload or remove them before continuing.
-            </p>
-          )}
+          <div className="photo-upload__footer">
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!canContinue || assessing}
+              onClick={handleContinue}
+            >
+              {continueLabel()}
+            </button>
 
-          <button
-            type="button"
-            className="btn btn-primary photo-upload__continue"
-            disabled={!canContinue || assessing}
-            onClick={handleContinue}
-          >
-            {assessing ? 'Running assessment…' : `Continue with ${successCount} photo${successCount === 1 ? '' : 's'}`}
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary photo-upload__back"
-            onClick={() => navigate(`/questionnaire/${questionnaireId}`)}
-            disabled={assessing}
-          >
-            Back to questionnaire
-          </button>
+            {/* State the requirement rather than leaving a dead button. */}
+            {requirementText() && (
+              <p className="photo-upload__requirement" role="status">{requirementText()}</p>
+            )}
+
+            <button
+              type="button"
+              className="photo-upload__back-link"
+              onClick={() => navigate(`/questionnaire/${questionnaireId}`)}
+              disabled={assessing}
+            >
+              Back to questionnaire
+            </button>
+          </div>
         </div>
       </PageTransition>
     </AppShell>

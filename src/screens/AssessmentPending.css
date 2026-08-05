@@ -1,45 +1,117 @@
 .assessment-result__subhead {
-  color: var(--color-ink-soft);
-  margin-top: var(--space-2);
-  margin-bottom: var(--space-6);
+  color: var(--color-ink-faint);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+  margin-bottom: var(--space-5);
 }
 
-.assessment-result__card {
+.assessment-result__book {
+  margin-top: var(--space-5);
+  text-decoration: none;
+}
+
+/* What happens next ------------------------------------------------------ */
+
+.assessment-result__next {
+  margin-top: var(--space-6);
+  padding: var(--space-5) var(--space-4);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-lg);
+}
+
+.assessment-result__next h2 {
+  font-size: var(--text-base);
+  color: var(--color-primary-dark);
   margin-bottom: var(--space-4);
 }
+
+.assessment-result__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.assessment-result__timeline li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.assessment-result__timeline-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-paper-raised);
+  color: var(--color-primary);
+}
+
+.assessment-result__timeline strong {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}
+
+.assessment-result__timeline p {
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+
+/* Supporting detail ------------------------------------------------------ */
 
 .assessment-result__summary {
-  margin-bottom: var(--space-4);
+  margin-top: var(--space-5);
 }
 
-.assessment-result__summary h3 {
+.assessment-result__summary h2 {
+  font-size: var(--text-base);
   margin-bottom: var(--space-2);
 }
 
 .assessment-result__summary p {
   color: var(--color-ink-soft);
+  line-height: 1.65;
 }
 
-.assessment-result__specialist h3 {
-  margin-bottom: var(--space-2);
+.assessment-result__specialist {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
 }
 
-.assessment-result__specialist p {
+.assessment-result__specialist span {
+  font-size: var(--text-sm);
+  color: var(--color-ink-faint);
+}
+
+.assessment-result__specialist strong {
   color: var(--color-primary-dark);
   font-weight: 600;
 }
 
 .assessment-result__disclaimer {
   margin-top: var(--space-5);
-  padding: var(--space-4);
+  padding-left: var(--space-4);
   border-left: 3px solid var(--color-line-strong);
-}
-
-.assessment-result__disclaimer p {
-  font-size: 0.8125rem;
+  font-size: var(--text-xs);
+  line-height: 1.6;
   color: var(--color-ink-faint);
 }
 
-.assessment-result__done {
+.assessment-result__actions {
   margin-top: var(--space-6);
 }

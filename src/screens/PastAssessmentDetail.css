@@ -1,15 +1,3 @@
-.past-assessment-detail__back {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 0;
-  margin-bottom: var(--space-5);
-  cursor: pointer;
-  align-self: flex-start;
-}
-
 .past-assessment-detail__heading {
   display: flex;
   align-items: flex-start;
@@ -19,7 +7,7 @@
 }
 
 .past-assessment-detail__heading p {
-  font-size: 0.8125rem;
+  font-size: var(--text-xs);
   color: var(--color-ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.04em;

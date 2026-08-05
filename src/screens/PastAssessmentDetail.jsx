@@ -53,13 +53,9 @@ export default function PastAssessmentDetail() {
   const reviewed = Boolean(assessment?.doctorRiskClassification);
 
   return (
-    <AppShell>
+    <AppShell back="/assessments" title="Screening result">
       <PageTransition>
         <div className="screen past-assessment-detail">
-          <button type="button" className="past-assessment-detail__back" onClick={() => navigate('/assessments')}>
-            &larr; Back to past assessments
-          </button>
-
           {loading && <DetailSkeleton />}
 
           {!loading && error && (
@@ -76,8 +72,8 @@ export default function PastAssessmentDetail() {
             <>
               <header className="past-assessment-detail__heading">
                 <div>
-                  <p>Screening result</p>
-                  <h1>{new Date(assessment.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</h1>
+                  <p>Screened on</p>
+                  <h2>{new Date(assessment.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
                 </div>
                 <RiskTier classification={assessment.aiRiskClassification} />
               </header>

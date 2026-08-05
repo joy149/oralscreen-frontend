@@ -4,7 +4,7 @@ import { api, ApiError } from '../../api/client';
 import { createDoctorSession, useDoctorSession } from '../../context/DoctorSessionContext';
 import PageTransition from '../../components/shared/PageTransition';
 import OtpInput from '../../components/shared/OtpInput';
-import oralscreenLogo from '../../assets/oralscreen_icon.jpg';
+import oralscreenLogo from '../../assets/oralscreen-mark.png';
 import { auth, setupRecaptcha, sendFirebasePhoneOtp, firebaseSignOut } from '../../config/firebase';
 import './DoctorLogin.css';
 

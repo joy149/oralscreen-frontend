@@ -4,6 +4,7 @@ import AppShell from '../components/layout/AppShell';
 import ErrorState from '../components/shared/ErrorState';
 import { QuestionnaireSkeleton } from '../components/shared/Skeleton';
 import PageTransition from '../components/shared/PageTransition';
+import ChoiceGroup from '../components/shared/ChoiceGroup';
 import { api } from '../api/client';
 import { usePatient } from '../context/PatientContext';
 import './QuestionnaireForm.css';
@@ -17,14 +18,19 @@ const DURATION_OPTIONS = [
   { value: 'MORE_THAN_1_MONTH', label: 'More than 1 month' },
 ];
 
-const TOGGLES = [
-  { key: 'pain', label: 'Pain' },
-  { key: 'bleeding', label: 'Bleeding' },
+const SYMPTOMS = [
+  { key: 'pain', label: 'Pain', hint: 'Aching or soreness in the area' },
+  { key: 'bleeding', label: 'Bleeding', hint: 'Gums or the area bleed' },
   { key: 'difficultySwallowingChewing', label: 'Difficulty swallowing or chewing' },
-  { key: 'tobaccoUse', label: 'Tobacco use' },
+];
+
+const HABITS = [
+  { key: 'tobaccoUse', label: 'Tobacco use', hint: 'Smoking or chewing tobacco' },
   { key: 'alcoholUse', label: 'Alcohol use' },
   { key: 'paanUse', label: 'Paan / gutkha use' },
 ];
+
+const ALL_QUESTIONS = [...SYMPTOMS, ...HABITS];
 
 export default function QuestionnaireForm() {
   const navigate = useNavigate();
@@ -32,8 +38,11 @@ export default function QuestionnaireForm() {
   const { patient } = usePatient();
 
   const [durationOfSymptom, setDurationOfSymptom] = useState('');
-  const [toggles, setToggles] = useState(
-    Object.fromEntries(TOGGLES.map(({ key }) => [key, false]))
+  // null = not yet answered, which is deliberately distinct from an explicit
+  // "No". The old switch-based form defaulted every question to false, so a
+  // patient who simply scrolled past submitted six silent negatives.
+  const [answers, setAnswers] = useState(
+    Object.fromEntries(ALL_QUESTIONS.map(({ key }) => [key, null]))
   );
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -54,8 +63,11 @@ export default function QuestionnaireForm() {
       .then((questionnaire) => {
         if (cancelled) return;
         setDurationOfSymptom(questionnaire.durationOfSymptom || '');
-        setToggles(Object.fromEntries(
-          TOGGLES.map(({ key }) => [key, Boolean(questionnaire[key])])
+        setAnswers(Object.fromEntries(
+          ALL_QUESTIONS.map(({ key }) => [
+            key,
+            questionnaire[key] == null ? null : Boolean(questionnaire[key]),
+          ])
         ));
         setAdditionalNotes(questionnaire.additionalNotes || '');
       })
@@ -79,11 +91,12 @@ export default function QuestionnaireForm() {
     return null;
   }
 
-  function toggle(key) {
-    setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
+  function answer(key, value) {
+    setAnswers((prev) => ({ ...prev, [key]: value }));
   }
 
-  const isComplete = Boolean(durationOfSymptom);
+  const unanswered = ALL_QUESTIONS.filter(({ key }) => answers[key] == null).length;
+  const isComplete = Boolean(durationOfSymptom) && unanswered === 0;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -92,9 +105,11 @@ export default function QuestionnaireForm() {
     setErrorSource(null);
     setSubmitting(true);
     try {
+      // The API contract is booleans, so send booleans. The null state is a
+      // client-side completeness guard, not a wire value.
       const data = {
         durationOfSymptom,
-        ...toggles,
+        ...Object.fromEntries(ALL_QUESTIONS.map(({ key }) => [key, answers[key] === true])),
         additionalNotes: additionalNotes.trim() || undefined,
       };
       const questionnaire = questionnaireId
@@ -166,22 +181,44 @@ export default function QuestionnaireForm() {
               </select>
             </div>
 
-            <div className="card questionnaire-form__toggles">
-              {TOGGLES.map((t) => (
-                <div className="toggle-row" key={t.key}>
-                  <span>{t.label}</span>
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={toggles[t.key]}
-                      onChange={() => toggle(t.key)}
-                    />
-                    <span className="track" />
-                    <span className="thumb" />
-                  </label>
-                </div>
-              ))}
-            </div>
+            <section className="questionnaire-form__group" aria-labelledby="symptoms-heading">
+              <h2 className="questionnaire-form__group-title" id="symptoms-heading">
+                Are you experiencing any of these?
+              </h2>
+              <div className="card questionnaire-form__questions">
+                {SYMPTOMS.map((q) => (
+                  <ChoiceGroup
+                    key={q.key}
+                    id={q.key}
+                    label={q.label}
+                    hint={q.hint}
+                    value={answers[q.key]}
+                    onChange={(value) => answer(q.key, value)}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section className="questionnaire-form__group" aria-labelledby="habits-heading">
+              <h2 className="questionnaire-form__group-title" id="habits-heading">
+                Do any of these apply to you?
+              </h2>
+              <p className="questionnaire-form__group-note">
+                These affect oral cancer risk, so an honest answer helps the dentist. Nothing here is shared outside your care team.
+              </p>
+              <div className="card questionnaire-form__questions">
+                {HABITS.map((q) => (
+                  <ChoiceGroup
+                    key={q.key}
+                    id={q.key}
+                    label={q.label}
+                    hint={q.hint}
+                    value={answers[q.key]}
+                    onChange={(value) => answer(q.key, value)}
+                  />
+                ))}
+              </div>
+            </section>
 
             <div className="field">
               <label htmlFor="notes">Anything else you'd like to add? (optional)</label>
@@ -208,6 +245,17 @@ export default function QuestionnaireForm() {
                 {submitting ? 'Saving…' : questionnaireId ? 'Save changes & return to photos' : 'Continue to photos'}
               </button>
             </div>
+
+            {/* A disabled control should state its requirement, not just refuse. */}
+            {!isComplete && !submitting && (
+              <p className="questionnaire-form__requirement" role="status">
+                {!durationOfSymptom && unanswered > 0
+                  ? `Select a duration and answer ${unanswered} more question${unanswered === 1 ? '' : 's'} to continue.`
+                  : !durationOfSymptom
+                    ? 'Select how long you’ve noticed this to continue.'
+                    : `Answer ${unanswered} more question${unanswered === 1 ? '' : 's'} to continue.`}
+              </p>
+            )}
           </form>
         </div>
       </PageTransition>

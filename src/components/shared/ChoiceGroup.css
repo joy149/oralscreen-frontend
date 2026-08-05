@@ -1,0 +1,76 @@
+.choice-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.choice-group:last-child {
+  border-bottom: none;
+}
+
+.choice-group__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.choice-group__label {
+  font-size: var(--text-base);
+  color: var(--color-ink);
+}
+
+.choice-group__hint {
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+}
+
+.choice-group__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex-shrink: 0;
+  padding: 3px;
+  gap: 3px;
+  background: var(--color-paper-sunken);
+  border: 1px solid var(--color-line-input);
+  border-radius: var(--radius-pill);
+}
+
+.choice-group__option {
+  min-width: 52px;
+  min-height: 38px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-ink-faint);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.choice-group__option:hover:not(.is-selected) {
+  color: var(--color-ink);
+}
+
+.choice-group__option.is-selected {
+  background: var(--color-paper-raised);
+  color: var(--color-ink);
+  box-shadow: 0 1px 2px rgba(23, 38, 42, 0.10);
+}
+
+/* "Yes" is the clinically notable answer, so it carries the brand colour —
+   but only once actually selected, never as a default nudge. */
+.choice-group__option--yes.is-selected {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.choice-group__option:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

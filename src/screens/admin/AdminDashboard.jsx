@@ -20,7 +20,7 @@ import {
   Filler,
 } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
-import oralscreenLogo from '../../assets/oralscreen_icon.jpg';
+import oralscreenLogo from '../../assets/oralscreen-mark.png';
 import './AdminDashboard.css';
 
 ChartJS.register(

@@ -67,11 +67,10 @@ export default function PatientProfile() {
   }
 
   return (
-    <AppShell>
+    <AppShell back title="Your profile">
       <PageTransition>
         <div className="screen patient-profile">
           <div className="patient-profile__intro">
-            <h1>Your profile</h1>
             <p>Keep your details up to date so your doctor has accurate context.</p>
           </div>
 

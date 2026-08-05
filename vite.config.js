@@ -12,7 +12,17 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.svg'],
+        includeAssets: ['favicon.png'],
+        workbox: {
+          // Patients install this PWA; clinicians and admins use it on a desktop
+          // browser. Precaching the clinician chunks (the admin dashboard alone
+          // is ~184 KB of chart.js) would put them back on the patient's first
+          // load, undoing the route split. They still load on demand.
+          globIgnores: [
+            '**/AdminDashboard-*.{js,css}',
+            '**/Doctor*-*.{js,css}',
+          ],
+        },
         manifest: {
           name: 'OralScreen',
           short_name: 'OralScreen',

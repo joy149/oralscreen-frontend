@@ -1,13 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400..700;1,400..700&family=Noto+Sans:ital,wght@0,300..700;1,300..700&display=swap');
+/* Fonts are loaded via <link rel="preconnect"> + <link rel="stylesheet"> in
+   index.html. An @import here would serialise the font request behind the CSS
+   parse, delaying first paint on exactly the slow connections this pilot targets. */
 
 :root {
   /* Surfaces */
   --color-paper: #fbf8f3;
   --color-paper-raised: #ffffff;
+  --color-paper-sunken: #f4efe6;
   --color-line: #e4ddd0;
   --color-line-strong: #d3c9b6;
+  /* Interactive boundaries (form fields, unselected controls) need 3:1 against
+     the adjacent surface per WCAG 1.4.11. --color-line-strong is only 1.6:1 —
+     fine as a decorative divider, not as a field edge. */
+  --color-line-input: #8f8574;
 
-  /* Ink — High-contrast WCAG AAA readable colors */
+  /* Ink — verified against --color-paper:
+     ink 16.4:1 (AAA) · ink-soft 8.79:1 (AAA) · ink-faint 5.69:1 (AA) */
   --color-ink: #111c1e;
   --color-ink-soft: #384a4d;
   --color-ink-faint: #546669;
@@ -17,23 +25,43 @@
   --color-primary-dark: #16514e;
   --color-primary-soft: #e4f0ee;
 
-  /* Risk scale — a real ordinal scale, not stoplight colors */
+  /* Risk scale — a real ordinal scale, not stoplight colors.
+     Each tier has a saturated FILL (gauges, dots, bars) and a darkened INK
+     for text. The fills alone do not meet contrast as text colours: the
+     moderate fill measured 2.60:1 on its own soft background. */
   --color-risk-mild: #5b8c6e;
   --color-risk-mild-soft: #e9f1ea;
+  --color-risk-mild-ink: #28523a;        /* 7.73:1 on mild-soft */
   --color-risk-moderate: #c98a2c;
   --color-risk-moderate-soft: #fbf0dd;
+  --color-risk-moderate-ink: #7a4f06;    /* 6.31:1 on moderate-soft */
   --color-risk-high: #b8433a;
   --color-risk-high-soft: #fbe9e7;
+  --color-risk-high-ink: #8c2d25;        /* 7.12:1 on high-soft */
 
   /* Feedback */
   --color-error: #b8433a;
   --color-error-soft: #fbe9e7;
+  --color-error-ink: #8c2d25;
   --color-success: #5b8c6e;
   --color-success-soft: #e9f1ea;
+  --color-success-ink: #28523a;
 
-  /* Type — Modern high-legibility healthcare typography */
+  /* Disabled — recedes into the page instead of reading as a filled button */
+  --color-disabled-bg: #ede8de;
+  --color-disabled-ink: #546669;         /* 4.94:1 on disabled-bg */
+
+  /* Type */
   --font-display: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.125rem;
 
   /* Scale */
   --space-1: 4px;
@@ -48,10 +76,18 @@
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 20px;
+  --radius-pill: 999px;
 
   --shadow-card: 0 1px 2px rgba(23, 38, 42, 0.06), 0 4px 16px rgba(23, 38, 42, 0.05);
   --shadow-card-hover: 0 2px 8px rgba(23, 38, 42, 0.08), 0 8px 24px rgba(23, 38, 42, 0.06);
   --shadow-elevated: 0 4px 12px rgba(23, 38, 42, 0.10), 0 12px 36px rgba(23, 38, 42, 0.08);
+
+  /* Stacking order */
+  --z-header: 100;
+  --z-dropdown: 200;
+  --z-overlay: 800;
+  --z-modal: 900;
+  --z-toast: 1000;
 
   /* Animation & Easings */
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,11 +96,6 @@
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --duration-fast: 0.15s;
   --duration-normal: 0.25s;
-
-  /* Glassmorphism & Translucency Materials */
-  --glass-bg: rgba(251, 248, 243, 0.82);
-  --glass-border: rgba(228, 221, 208, 0.75);
-  --glass-blur: blur(16px) saturate(180%);
 
   /* Gradient accents */
   --gradient-primary: linear-gradient(135deg, #1f6f6b 0%, #2a9d8f 100%);

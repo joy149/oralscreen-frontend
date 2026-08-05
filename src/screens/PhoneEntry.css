@@ -3,48 +3,6 @@
   gap: var(--space-6);
 }
 
-.phone-entry__role-switch {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  align-self: center;
-  width: min(100%, 280px);
-  padding: 4px;
-  border: 1px solid var(--color-line);
-  border-radius: 999px;
-  background: var(--color-paper-raised);
-  box-shadow: 0 1px 3px rgba(23, 38, 42, 0.05);
-}
-
-.phone-entry__role-switch button {
-  min-height: 38px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--color-ink-soft);
-  font-size: 0.875rem;
-  font-weight: 600;
-  position: relative;
-  z-index: 1;
-  transition: color 160ms var(--ease-out);
-}
-
-.phone-entry__role-switch button.is-active {
-  color: #ffffff;
-}
-
-.phone-entry__role-indicator {
-  position: absolute;
-  inset: 0;
-  background: var(--color-primary);
-  border-radius: 999px;
-  z-index: -1;
-  box-shadow: 0 2px 6px rgba(31, 111, 107, 0.25);
-}
-
-.phone-entry__role-switch button:not(.is-active):hover {
-  color: var(--color-primary-dark);
-}
-
 .phone-entry__intro {
   text-align: center;
   display: flex;
@@ -59,8 +17,8 @@
   padding: 5px 14px;
   background: var(--color-primary-soft);
   color: var(--color-primary-dark);
-  border-radius: 999px;
-  font-size: 0.8125rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
   font-weight: 600;
   margin-bottom: var(--space-3);
   border: 1px solid rgba(31, 111, 107, 0.15);
@@ -74,28 +32,32 @@
 .phone-entry__intro p {
   margin-top: var(--space-2);
   color: var(--color-ink-soft);
-  font-size: 0.9375rem;
+  font-size: var(--text-base);
   max-width: 360px;
 }
 
+/* A 3-up grid rather than a wrapping flex row: at 375px the flex version
+   broke 2 + 1, leaving an orphaned badge centred under the other two. */
 .phone-entry__trust-badges {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  width: 100%;
+  margin-top: var(--space-5);
 }
 
 .phone-entry__trust-item {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
   border-radius: var(--radius-sm);
   background: var(--color-paper-raised);
   border: 1px solid var(--color-line);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--color-ink-soft);
   box-shadow: 0 1px 2px rgba(23, 38, 42, 0.03);
@@ -107,7 +69,7 @@
 }
 
 .phone-entry__new-patient-note {
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--color-ink-soft);
   margin-bottom: var(--space-4);
 }
@@ -134,7 +96,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 0.84rem;
+  font-size: var(--text-sm);
   color: var(--color-ink-soft);
   cursor: pointer;
   line-height: 1.4;
@@ -178,7 +140,7 @@
   border: none;
   padding: 0;
   color: var(--color-ink-soft);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
   margin-bottom: var(--space-3);
@@ -190,13 +152,13 @@
 }
 
 .phone-entry__otp-header h2 {
-  font-size: 1.25rem;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-ink);
 }
 
 .phone-entry__otp-header p {
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--color-ink-soft);
   margin-top: var(--space-1);
 }

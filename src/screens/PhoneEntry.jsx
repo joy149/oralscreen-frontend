@@ -4,7 +4,6 @@ import AppShell from '../components/layout/AppShell';
 import ErrorState from '../components/shared/ErrorState';
 import PageTransition from '../components/shared/PageTransition';
 import OtpInput from '../components/shared/OtpInput';
-import { motion } from 'motion/react';
 import { api, ApiError } from '../api/client';
 import { usePatient } from '../context/PatientContext';
 import { ShieldCheck, Stethoscope, Clock, Sparkles, ArrowLeft } from 'lucide-react';
@@ -157,21 +156,15 @@ export default function PhoneEntry() {
   }
 
   return (
-    <AppShell>
+    <AppShell clinicianLink>
       <PageTransition>
         <div className="screen phone-entry">
           <div id="recaptcha-container"></div>
 
-          <div className="phone-entry__role-switch" aria-label="Choose login type">
-            <button type="button" className="is-active" aria-pressed="true">
-              Patient
-              <motion.div className="phone-entry__role-indicator" layoutId="role-indicator" />
-            </button>
-            <button type="button" aria-pressed="false" onClick={() => navigate('/doctor/login')}>
-              Doctor
-            </button>
-          </div>
-
+          {/* The Patient/Doctor switch used to sit here, above the hero. Nearly
+              all traffic is patients, so the staff entrance no longer occupies
+              the most valuable element on the screen — it's a footer link now
+              (see AppShell's clinicianLink). */}
           <div className="phone-entry__intro">
             <div className="phone-entry__hero-badge">
               <Sparkles size={14} className="phone-entry__hero-icon" />

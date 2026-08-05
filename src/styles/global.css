@@ -84,13 +84,47 @@ a {
   outline-offset: 2px;
 }
 
-.screen {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: var(--space-5) var(--space-4) var(--space-8);
-  min-height: 100dvh;
+/* The shell's <main> is the flex parent that owns viewport height. Screens grow
+   into it rather than each declaring 100dvh, which previously stacked on top of
+   the header and footer and made every page taller than the viewport. */
+.page-transition {
+  flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+.screen {
+  flex: 1;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--space-5) var(--space-4);
+  /* index.html opts into viewport-fit=cover, so the bottom inset must be paid
+     back here or the last control sits under the iOS home indicator. */
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+}
+
+/* Keyboard users shouldn't have to tab through the header on every screen. */
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: var(--space-4);
+  z-index: calc(var(--z-header) + 1);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-primary);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 .btn {
@@ -123,9 +157,14 @@ a {
   background: var(--color-primary-dark);
 }
 
-.btn-primary:disabled {
-  background: var(--color-line-strong);
-  color: var(--color-ink-faint);
+/* Disabled buttons must recede, not read as a filled control. The old
+   --color-line-strong fill looked like an enabled button and its label
+   measured 3.68:1 (fails AA). */
+.btn:disabled {
+  background: var(--color-disabled-bg);
+  color: var(--color-disabled-ink);
+  border-color: transparent;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
@@ -158,8 +197,10 @@ a {
 .field textarea {
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  min-height: 44px;
-  border: 1.5px solid var(--color-line);
+  min-height: var(--touch-target-min);
+  /* --color-line measured 1.27:1 against paper — effectively an invisible
+     field boundary. --color-line-input meets the 3:1 non-text requirement. */
+  border: 1.5px solid var(--color-line-input);
   border-radius: var(--radius-sm);
   background: var(--color-paper-raised);
   color: var(--color-ink);
@@ -223,9 +264,14 @@ a {
 .switch .track {
   position: absolute;
   inset: 0;
-  background: var(--color-line-strong);
-  border-radius: 999px;
-  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  background: var(--color-paper-sunken);
+  border: 1.5px solid var(--color-ink-faint);
+  border-radius: var(--radius-pill);
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.switch input:checked + .track {
+  border-color: var(--color-primary);
 }
 
 .switch input:focus-visible + .track {
