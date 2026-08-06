@@ -141,6 +141,19 @@
   height: 160px;
 }
 
+/* Shown in place of a chart when there is genuinely nothing to plot. Centred in the same
+   box the chart would occupy so the card keeps its height and the grid doesn't reflow. */
+.admin-analytics__no-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin: 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-ink-faint);
+}
+
 .admin-analytics__card--stat {
   justify-content: center;
   align-items: flex-start;

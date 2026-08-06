@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import PageTransition from '../components/shared/PageTransition';
 import ErrorState from '../components/shared/ErrorState';
@@ -7,6 +7,7 @@ import Skeleton from '../components/shared/Skeleton';
 import RiskTier from '../components/doctor/RiskTier';
 import { api } from '../api/client';
 import { usePatient } from '../context/PatientContext';
+import useSessionRecovery from '../hooks/useSessionRecovery';
 import './PastAssessmentDetail.css';
 
 function DetailSkeleton() {
@@ -25,8 +26,8 @@ function DetailSkeleton() {
 
 export default function PastAssessmentDetail() {
   const { assessmentId } = useParams();
-  const navigate = useNavigate();
   const { patient } = usePatient();
+  const handleAuthError = useSessionRecovery();
   const [assessment, setAssessment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,17 +38,16 @@ export default function PastAssessmentDetail() {
     try {
       setAssessment(await api.getAssessment(assessmentId));
     } catch (err) {
-      setError(err);
+      if (!handleAuthError(err)) setError(err);
     } finally {
       setLoading(false);
     }
-  }, [assessmentId]);
+  }, [assessmentId, handleAuthError]);
 
   useEffect(() => { loadAssessment(); }, [loadAssessment]);
 
   if (!patient) {
-    navigate('/');
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   const reviewed = Boolean(assessment?.doctorRiskClassification);
@@ -105,6 +105,12 @@ export default function PastAssessmentDetail() {
                         <dt>Doctor's assessment</dt>
                         <dd><RiskTier classification={assessment.doctorRiskClassification} /></dd>
                       </div>
+                      {assessment.reviewedByDoctorName && (
+                        <div>
+                          <dt>Reviewed by</dt>
+                          <dd>{assessment.reviewedByDoctorName}</dd>
+                        </div>
+                      )}
                       {assessment.doctorReviewedAt && (
                         <div>
                           <dt>Reviewed on</dt>

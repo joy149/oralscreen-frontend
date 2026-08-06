@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import PageTransition from '../components/shared/PageTransition';
 import { useToast } from '../components/shared/Toast';
 import { api } from '../api/client';
 import { usePatient } from '../context/PatientContext';
+import useSessionRecovery from '../hooks/useSessionRecovery';
 import './PatientProfile.css';
 
 // The backend returns GenderType by enum name (e.g. "MALE"), but the gender-options
@@ -18,9 +19,9 @@ const GENDER_DISPLAY_BY_ENUM = {
 };
 
 export default function PatientProfile() {
-  const navigate = useNavigate();
   const toast = useToast();
   const { patient, setPatient } = usePatient();
+  const handleAuthError = useSessionRecovery();
 
   const [name, setName] = useState(patient?.name || '');
   const [age, setAge] = useState(patient?.age != null ? String(patient.age) : '');
@@ -40,8 +41,7 @@ export default function PatientProfile() {
   }, []);
 
   if (!patient) {
-    navigate('/');
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   async function handleSubmit(e) {
@@ -59,8 +59,10 @@ export default function PatientProfile() {
       setPatient(updated);
       toast.success('Profile updated');
     } catch (err) {
-      setError(err);
-      toast.error('Could not save your profile. Please try again.');
+      if (!handleAuthError(err)) {
+        setError(err);
+        toast.error('Could not save your profile. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }

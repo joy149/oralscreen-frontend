@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import PageTransition from '../components/shared/PageTransition';
 import ErrorState from '../components/shared/ErrorState';
@@ -7,6 +7,7 @@ import Skeleton from '../components/shared/Skeleton';
 import RiskTier from '../components/doctor/RiskTier';
 import { api } from '../api/client';
 import { usePatient } from '../context/PatientContext';
+import useSessionRecovery from '../hooks/useSessionRecovery';
 import './PastAssessments.css';
 
 function relativeTime(value) {
@@ -49,6 +50,7 @@ function ListSkeleton() {
 export default function PastAssessments() {
   const navigate = useNavigate();
   const { patient } = usePatient();
+  const handleAuthError = useSessionRecovery();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -61,17 +63,19 @@ export default function PastAssessments() {
       const payload = await api.getPatientAssessments(patient.id);
       setItems(assessmentItems(payload));
     } catch (err) {
-      setError(err);
+      if (!handleAuthError(err)) setError(err);
     } finally {
       setLoading(false);
     }
-  }, [patient]);
+  }, [handleAuthError, patient]);
 
   useEffect(() => { loadAssessments(); }, [loadAssessments]);
 
+  // Redirect as a render result, not as a side effect during render — calling navigate()
+  // inline updates the router while this component is still rendering, which React warns
+  // about and which double-invokes under StrictMode.
   if (!patient) {
-    navigate('/');
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   return (

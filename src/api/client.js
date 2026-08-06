@@ -12,11 +12,20 @@ function resolveApiUrl(url) {
   return `${BASE_URL}${normalizedPath}`;
 }
 
-const DEFAULT_SEX_OPTIONS = [
-  { value: 'MALE', label: 'Male' },
-  { value: 'FEMALE', label: 'Female' },
-  { value: 'TRANSGENDER', label: 'Transgender' },
-  { value: 'PREFER_NOT_TO_SAY', label: 'Prefer not to say' }
+/**
+ * Fallback for when `/api/patients/gender/options` is unavailable.
+ *
+ * The values are **display names**, matching what that endpoint returns and what the server
+ * matches on (`GenderType.findByDisplayName`). They used to be enum names — `MALE` rather
+ * than `Male` — so whenever the options call failed, every subsequent registration submitted
+ * a `sex` the server resolved to null and silently dropped. Keep these strings identical to
+ * `GenderType`'s display names.
+ */
+export const DEFAULT_SEX_OPTIONS = [
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+  { value: 'Transgender', label: 'Transgender' },
+  { value: 'Prefer Not to Say', label: 'Prefer Not to Say' }
 ];
 
 function normalizeOptionsPayload(payload) {
@@ -236,6 +245,14 @@ export const api = {
 
   getQuestionnaire: (id) => request(`/api/questionnaires/${id}`),
 
+  /**
+   * The assessment for a questionnaire. This is what makes a result survive a page refresh:
+   * the result screen is reached by navigation state, which is gone the moment the patient
+   * reloads, backgrounds the PWA long enough, or opens the URL again later.
+   */
+  getQuestionnaireAssessment: (questionnaireId) =>
+    request(`/api/questionnaires/${questionnaireId}/assessment`),
+
   uploadImage,
 
   triggerAssessment: (questionnaireId) =>
@@ -277,6 +294,13 @@ export const api = {
 
   approveDoctor: (doctorId, adminKey) =>
     adminRequest(`/api/admin/doctors/${doctorId}/approve`, adminKey, { method: 'POST' }),
+
+  /**
+   * Dashboard metrics. Deliberately the `/api/admin/**` copy rather than
+   * `/api/doctors/metrics`: the console authenticates with the admin key alone and has no
+   * Firebase token, so it can never hold ROLE_DOCTOR.
+   */
+  getAdminMetrics: (adminKey) => adminRequest('/api/admin/metrics', adminKey),
 
   resolveApiUrl,
 };

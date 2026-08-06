@@ -167,3 +167,14 @@
   text-align: center;
 }
 
+/* Shown when an expired session redirected the patient back to sign-in. Informational,
+   not an error — they did nothing wrong and their data is intact. */
+.phone-entry__session-notice {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-paper-raised);
+  font-size: 0.875rem;
+  color: var(--color-ink-soft, var(--color-ink));
+}
+

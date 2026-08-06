@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import ErrorState from '../components/shared/ErrorState';
 import PageTransition from '../components/shared/PageTransition';
 import OtpInput from '../components/shared/OtpInput';
-import { api, ApiError } from '../api/client';
+import { api, ApiError, DEFAULT_SEX_OPTIONS } from '../api/client';
 import { usePatient } from '../context/PatientContext';
 import { ShieldCheck, Stethoscope, Clock, Sparkles, ArrowLeft } from 'lucide-react';
 import PrivacyPolicyModal from '../components/shared/PrivacyPolicyModal';
@@ -13,6 +13,10 @@ import './PhoneEntry.css';
 
 export default function PhoneEntry() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Set by useSessionRecovery when an expired session bounced them here. Without it the
+  // patient is dropped on the sign-in screen mid-task with no explanation.
+  const sessionExpired = Boolean(location.state?.sessionExpired);
   const { setPatient } = usePatient();
 
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -40,14 +44,10 @@ export default function PhoneEntry() {
         if (mounted) setSexOptions(options);
       } catch (err) {
         console.error('Failed to load sex options', err);
-        if (mounted) {
-          setSexOptions([
-            { value: '', label: 'Prefer not to say' },
-            { value: 'MALE', label: 'Male' },
-            { value: 'FEMALE', label: 'Female' },
-            { value: 'OTHER', label: 'Other' },
-          ]);
-        }
+        // Shared with the client's own fallback: these values are display names, which is
+        // what the server matches on. The list that used to be inlined here sent enum names
+        // ("MALE"), which the server resolved to null and dropped without complaint.
+        if (mounted) setSexOptions(DEFAULT_SEX_OPTIONS);
       } finally {
         if (mounted) setLoadingSexOptions(false);
       }
@@ -188,6 +188,12 @@ export default function PhoneEntry() {
               </div>
             </div>
           </div>
+
+          {stage === 'phone' && sessionExpired && (
+            <p className="phone-entry__session-notice" role="status">
+              You were signed out. Verify your number again to get back to your screenings.
+            </p>
+          )}
 
           {stage === 'phone' && (
             <form onSubmit={handlePhoneSubmit} className="card">

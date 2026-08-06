@@ -69,6 +69,34 @@ function getInitials(name) {
   return (parts[0]?.substring(0, 2) || 'DR').toUpperCase();
 }
 
+const RISK_LABELS = {
+  NO_MILD_RISK: 'No / mild risk',
+  MODERATE_RISK: 'Moderate risk',
+  HIGH_RISK: 'High risk',
+};
+
+const RISK_COLORS = {
+  NO_MILD_RISK: '#5b8c6e',
+  MODERATE_RISK: '#c98a2c',
+  HIGH_RISK: '#b8433a',
+};
+
+// Weekday initials for the volume chart. The API returns ISO dates; showing the day name
+// beats showing seven identical-looking dates.
+function dayLabel(isoDate) {
+  const parsed = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return isoDate;
+  return new Intl.DateTimeFormat('en-IN', { weekday: 'short' }).format(parsed);
+}
+
+function formatReviewTime(minutes) {
+  if (minutes == null) return null;
+  if (minutes < 60) return `${Math.round(minutes)} min`;
+  const hours = minutes / 60;
+  if (hours < 24) return `${hours.toFixed(1)} hr`;
+  return `${(hours / 24).toFixed(1)} days`;
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const toast = useToast();
@@ -82,13 +110,24 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [approvingIds, setApprovingIds] = useState(new Set());
+  const [metrics, setMetrics] = useState(null);
+  const [metricsError, setMetricsError] = useState(false);
+
+  // Every number below comes from /api/admin/metrics. These charts used to be drawn from
+  // literals in this file — a screening curve and a risk split that were made up, and a
+  // "14.2 min" triage time — while the real metrics endpoint went uncalled.
+  const dailyVolume = metrics?.dailyVolume || [];
+  const riskDistribution = metrics?.riskDistribution || {};
+  const hasVolume = dailyVolume.some((day) => day.count > 0);
+  const hasRiskData = Object.values(riskDistribution).some((count) => count > 0);
+  const averageReviewTime = formatReviewTime(metrics?.averageReviewMinutes);
 
   const lineChartData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: dailyVolume.map((day) => dayLabel(day.date)),
     datasets: [
       {
         label: 'Screenings Completed',
-        data: [14, 22, 18, 29, 31, 24, 38],
+        data: dailyVolume.map((day) => day.count),
         borderColor: '#1f6f6b',
         backgroundColor: 'rgba(31, 111, 107, 0.12)',
         fill: true,
@@ -97,12 +136,13 @@ export default function AdminDashboard() {
     ],
   };
 
+  const riskKeys = Object.keys(RISK_LABELS).filter((key) => key in riskDistribution);
   const doughnutChartData = {
-    labels: ['Mild Risk', 'Moderate Risk', 'High Risk'],
+    labels: riskKeys.map((key) => RISK_LABELS[key]),
     datasets: [
       {
-        data: [65, 23, 12],
-        backgroundColor: ['#5b8c6e', '#c98a2c', '#b8433a'],
+        data: riskKeys.map((key) => riskDistribution[key] || 0),
+        backgroundColor: riskKeys.map((key) => RISK_COLORS[key]),
         borderWidth: 0,
       },
     ],
@@ -125,8 +165,11 @@ export default function AdminDashboard() {
         ticks: { color: '#546669' },
       },
       y: {
+        // Whole screenings only — a "2.5 screenings" gridline is nonsense, and at pilot
+        // volume the default tick step produces exactly that.
+        beginAtZero: true,
         grid: { color: 'rgba(0,0,0,0.06)' },
-        ticks: { color: '#546669' },
+        ticks: { color: '#546669', precision: 0 },
       },
     },
   };
@@ -138,6 +181,13 @@ export default function AdminDashboard() {
     }
     setLoading(true);
     setError(null);
+
+    // Metrics are decorative relative to the approval queue, so they load alongside it and
+    // fail on their own: a metrics outage should not hide the doctors waiting for approval.
+    api.getAdminMetrics(adminKey)
+      .then((payload) => { setMetrics(payload); setMetricsError(false); })
+      .catch(() => { setMetrics(null); setMetricsError(true); });
+
     try {
       const payload = await api.getPendingDoctors(adminKey);
       setDoctors(extractDoctorsList(payload));
@@ -267,7 +317,13 @@ export default function AdminDashboard() {
                   <h3>Weekly Screening Volume</h3>
                 </div>
                 <div className="admin-analytics__chart-wrapper">
-                  <Line data={lineChartData} options={chartOptions} />
+                  {hasVolume ? (
+                    <Line data={lineChartData} options={chartOptions} />
+                  ) : (
+                    <p className="admin-analytics__no-data">
+                      {metricsError ? 'Metrics unavailable' : 'No screenings in the last 7 days'}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -277,6 +333,11 @@ export default function AdminDashboard() {
                   <h3>Risk Level Breakdown</h3>
                 </div>
                 <div className="admin-analytics__chart-wrapper admin-analytics__chart-wrapper--donut">
+                  {!hasRiskData ? (
+                    <p className="admin-analytics__no-data">
+                      {metricsError ? 'Metrics unavailable' : 'No assessments yet'}
+                    </p>
+                  ) : (
                   <Doughnut
                     data={doughnutChartData}
                     options={{
@@ -293,6 +354,7 @@ export default function AdminDashboard() {
                       },
                     }}
                   />
+                  )}
                 </div>
               </div>
 
@@ -301,8 +363,19 @@ export default function AdminDashboard() {
                   <Clock size={18} className="admin-analytics__icon" />
                   <h3>Doctor Triage Speed</h3>
                 </div>
-                <div className="admin-analytics__stat-value">14.2 min</div>
-                <p className="admin-analytics__stat-note">Avg response time from submission to doctor review</p>
+                <div className="admin-analytics__stat-value">
+                  {averageReviewTime || '—'}
+                </div>
+                <p className="admin-analytics__stat-note">
+                  {averageReviewTime
+                    ? 'Avg time from submission to doctor review'
+                    : 'No reviewed screenings yet'}
+                </p>
+                {metrics && (
+                  <p className="admin-analytics__stat-note">
+                    {metrics.pendingReview} of {metrics.totalAssessments} awaiting review
+                  </p>
+                )}
               </div>
             </div>
           </section>

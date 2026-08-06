@@ -7,6 +7,7 @@ import PageTransition from '../components/shared/PageTransition';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../api/client';
 import { useToast } from '../components/shared/Toast';
+import useSessionRecovery from '../hooks/useSessionRecovery';
 import { Camera, ImagePlus, RefreshCw, Info, Check } from 'lucide-react';
 import './PhotoUpload.css';
 
@@ -73,6 +74,7 @@ export default function PhotoUpload() {
   const { questionnaireId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+  const handleAuthError = useSessionRecovery();
   const uploadQueueRef = useRef([]);
   const activeUploadsRef = useRef(0);
   const mountedRef = useRef(true);
@@ -361,8 +363,10 @@ export default function PhotoUpload() {
       const assessment = await api.triggerAssessment(questionnaireId);
       navigate(`/questionnaire/${questionnaireId}/assessment`, { state: { assessment } });
     } catch (err) {
-      setAssessError(err);
-      toast.error('Assessment could not be started. Please try again.');
+      if (!handleAuthError(err)) {
+        setAssessError(err);
+        toast.error('Assessment could not be started. Please try again.');
+      }
     } finally {
       setAssessing(false);
     }

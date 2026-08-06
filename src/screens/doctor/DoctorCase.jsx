@@ -322,6 +322,20 @@ export default function DoctorCase() {
               <span>03</span>
               <div><h2 id="doctor-review-title">Doctor review</h2><p>Record or update your clinical assessment</p></div>
             </div>
+            {/* Saving overwrites whatever is here, so say whose call is on record before the
+                form is touched — otherwise a colleague's assessment is replaced silently. */}
+            {assessment.reviewedByDoctorName && (
+              <p className="doctor-case__reviewed-by">
+                Reviewed by <strong>{assessment.reviewedByDoctorName}</strong>
+                {assessment.doctorReviewedAt && (
+                  <> on {new Date(assessment.doctorReviewedAt).toLocaleString('en-IN', {
+                    day: 'numeric', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit',
+                  })}</>
+                )}
+                . Saving replaces it.
+              </p>
+            )}
             <form className="doctor-case__form" onSubmit={submitReview}>
               <div className="field">
                 <label htmlFor="doctor-risk">Risk classification</label>

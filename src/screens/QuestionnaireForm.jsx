@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import ErrorState from '../components/shared/ErrorState';
 import { QuestionnaireSkeleton } from '../components/shared/Skeleton';
@@ -7,6 +7,7 @@ import PageTransition from '../components/shared/PageTransition';
 import ChoiceGroup from '../components/shared/ChoiceGroup';
 import { api } from '../api/client';
 import { usePatient } from '../context/PatientContext';
+import useSessionRecovery from '../hooks/useSessionRecovery';
 import './QuestionnaireForm.css';
 
 const DURATION_OPTIONS = [
@@ -36,6 +37,7 @@ export default function QuestionnaireForm() {
   const navigate = useNavigate();
   const { questionnaireId } = useParams();
   const { patient } = usePatient();
+  const handleAuthError = useSessionRecovery();
 
   const [durationOfSymptom, setDurationOfSymptom] = useState('');
   // null = not yet answered, which is deliberately distinct from an explicit
@@ -87,8 +89,7 @@ export default function QuestionnaireForm() {
   }, [questionnaireId, loadRetry]);
 
   if (!patient && !questionnaireId) {
-    navigate('/');
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   function answer(key, value) {
