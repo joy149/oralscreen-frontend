@@ -58,6 +58,18 @@ describe('access', () => {
 
     expect(screen.getByText('Sign in screen')).toBeInTheDocument();
   });
+
+  // An explicit path rather than history-back: this screen opens from the account menu on
+  // any screen, so `navigate(-1)` landed somewhere different each time, and left the app
+  // entirely when the patient arrived on a deep link.
+  it('sends the back control to the landing screen', async () => {
+    apiMock.getSexOptions.mockResolvedValue([]);
+    const { user } = renderProfile();
+
+    await user.click(screen.getByRole('button', { name: 'Go back' }));
+
+    expect(screen.getByText('Sign in screen')).toBeInTheDocument();
+  });
 });
 
 describe('prefilling from the stored patient', () => {

@@ -9,6 +9,13 @@
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
 
+    <!-- Phone sign-in is the first thing almost every visitor does, and it touches three
+         origins that would otherwise each cost a cold DNS+TLS handshake mid-flow: the
+         reCAPTCHA script, its payload host, and the Firebase Auth endpoint. -->
+    <link rel="preconnect" href="https://www.google.com" />
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
+
     <!-- Fonts are linked here rather than @import-ed from CSS so the request
          starts during HTML parse instead of queueing behind the stylesheet. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

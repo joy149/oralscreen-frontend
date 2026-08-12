@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { PatientProvider } from './context/PatientContext';
+import { PatientProvider, usePatient } from './context/PatientContext';
 import PhoneEntry from './screens/PhoneEntry';
+import PatientHome from './screens/PatientHome';
 import QuestionnaireForm from './screens/QuestionnaireForm';
 import PhotoUpload from './screens/PhotoUpload';
 import AssessmentPending from './screens/AssessmentPending';
@@ -21,6 +22,21 @@ const DoctorQueue = lazy(() => import('./screens/doctor/DoctorQueue'));
 const DoctorCase = lazy(() => import('./screens/doctor/DoctorCase'));
 const AdminDashboard = lazy(() => import('./screens/admin/AdminDashboard'));
 
+/**
+ * `/` is the app's only front door, so it answers to whoever knocks: the sign-in form for
+ * a stranger, the home screen for a patient who is already signed in.
+ *
+ * <p>A separate `/home` route was the alternative and is worse — it leaves `/` free to
+ * show the OTP form to an authenticated patient whenever anything lands there, which is
+ * the bug this replaces. Everything that already routes to `/` keeps working unchanged:
+ * `useSessionRecovery` clears the patient before navigating (so it lands on sign-in, as
+ * intended), and `AccountMenu`'s log out does the same.
+ */
+function PatientLanding() {
+  const { patient } = usePatient();
+  return patient ? <PatientHome /> : <PhoneEntry />;
+}
+
 export default function App() {
   return (
     <PatientProvider>
@@ -29,7 +45,7 @@ export default function App() {
           <BrowserRouter>
             <Suspense fallback={<LoadingState message="Loading…" />}>
               <Routes>
-                <Route path="/" element={<PhoneEntry />} />
+                <Route path="/" element={<PatientLanding />} />
                 <Route path="/questionnaire" element={<QuestionnaireForm />} />
                 <Route path="/questionnaire/:questionnaireId" element={<QuestionnaireForm />} />
                 <Route path="/questionnaire/:questionnaireId/photos" element={<PhotoUpload />} />

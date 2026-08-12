@@ -82,10 +82,23 @@ export default function AppShell({
               <ArrowLeft size={20} />
             </button>
           ) : (
-            <div className="app-shell__brand">
+            /* Both destinations are `/`: PatientLanding resolves it to the home screen for
+               a signed-in patient and to phone/OTP entry for everyone else, so the brand
+               does not need to know which one it is sending people to.
+
+               Note this is live during the questionnaire flow, where the shell renders the
+               brand rather than a back control and neither the in-progress answers nor
+               in-flight photo uploads are persisted anywhere — tapping it there abandons
+               them. */
+            <button
+              type="button"
+              className="app-shell__brand"
+              onClick={() => navigate('/')}
+              aria-label="OralScreen — go to home"
+            >
               <img src={oralscreenLogo} alt="" className="app-shell__logo" width="32" height="32" />
               <span>OralScreen</span>
-            </div>
+            </button>
           )}
 
           {back && title && <h1 className="app-shell__bar-title">{title}</h1>}

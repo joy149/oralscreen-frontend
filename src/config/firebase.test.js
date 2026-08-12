@@ -266,6 +266,135 @@ describe('setupRecaptcha', () => {
   });
 });
 
+describe('getRecaptchaVerifier', () => {
+  it('builds a verifier the first time and reuses it after that', async () => {
+    RecaptchaVerifier.mockReturnValue(undefined);
+    const { getRecaptchaVerifier } = await loadModule();
+
+    const first = getRecaptchaVerifier();
+    const second = getRecaptchaVerifier();
+
+    // Rebuilding per send threw away a warmed widget and paid to render a new one each time.
+    expect(second).toBe(first);
+    expect(RecaptchaVerifier).toHaveBeenCalledTimes(1);
+  });
+
+  it('rebuilds when the container has been torn out of the document', async () => {
+    RecaptchaVerifier.mockReturnValue(undefined);
+    const { getRecaptchaVerifier } = await loadModule();
+
+    getRecaptchaVerifier();
+    document.getElementById('recaptcha-container').remove();
+    getRecaptchaVerifier();
+
+    // The widget lived inside that element, so the old verifier is dead.
+    expect(RecaptchaVerifier).toHaveBeenCalledTimes(2);
+    expect(document.getElementById('recaptcha-container')).toBeTruthy();
+  });
+
+  it('rebuilds for a different container id', async () => {
+    RecaptchaVerifier.mockReturnValue(undefined);
+    const { getRecaptchaVerifier } = await loadModule();
+
+    getRecaptchaVerifier();
+    getRecaptchaVerifier('other-container');
+
+    expect(RecaptchaVerifier).toHaveBeenCalledTimes(2);
+  });
+
+  it('hands back a fresh verifier after setupRecaptcha forces a rebuild', async () => {
+    RecaptchaVerifier.mockReturnValue(undefined);
+    const { getRecaptchaVerifier, setupRecaptcha } = await loadModule();
+
+    const first = getRecaptchaVerifier();
+    const rebuilt = setupRecaptcha();
+
+    expect(rebuilt).not.toBe(first);
+    expect(getRecaptchaVerifier()).toBe(rebuilt);
+  });
+});
+
+describe('warmRecaptcha', () => {
+  it('renders the widget up front — constructing one downloads nothing', async () => {
+    const render = vi.fn().mockResolvedValue(1);
+    RecaptchaVerifier.mockReturnValue({ render });
+    const { warmRecaptcha } = await loadModule();
+
+    await warmRecaptcha();
+
+    expect(render).toHaveBeenCalled();
+  });
+
+  it('reuses the warmed verifier for the send that follows', async () => {
+    const render = vi.fn().mockResolvedValue(1);
+    const verifier = { render };
+    RecaptchaVerifier.mockReturnValue(verifier);
+    signInWithPhoneNumber.mockResolvedValue({});
+    const { warmRecaptcha, sendFirebasePhoneOtp } = await loadModule();
+
+    await warmRecaptcha();
+    await sendFirebasePhoneOtp('9876543210');
+
+    expect(RecaptchaVerifier).toHaveBeenCalledTimes(1);
+    expect(signInWithPhoneNumber).toHaveBeenCalledWith(mockAuth, '+919876543210', verifier);
+  });
+
+  it('resolves rather than throwing when the render fails', async () => {
+    RecaptchaVerifier.mockReturnValue({ render: vi.fn().mockRejectedValue(new Error('offline')) });
+    const { warmRecaptcha } = await loadModule();
+
+    // A cold send still works; it just pays the load cost itself.
+    await expect(warmRecaptcha()).resolves.toBeNull();
+  });
+
+  it('resolves when construction itself throws', async () => {
+    RecaptchaVerifier.mockImplementation(() => {
+      throw new Error('no document');
+    });
+    const { warmRecaptcha } = await loadModule();
+
+    await expect(warmRecaptcha()).resolves.toBeNull();
+  });
+
+  it('is a no-op on a verifier with no render (older SDK shapes)', async () => {
+    RecaptchaVerifier.mockReturnValue({});
+    const { warmRecaptcha } = await loadModule();
+
+    await expect(warmRecaptcha()).resolves.toBeNull();
+  });
+});
+
+describe('describePhoneAuthError', () => {
+  it('replaces developer-facing Firebase copy with something a patient can act on', async () => {
+    const { describePhoneAuthError } = await loadModule();
+
+    expect(
+      describePhoneAuthError({ code: 'auth/too-many-requests', message: 'Firebase: Error (auth/too-many-requests).' }, 'fallback')
+    ).toBe('Too many attempts from this device. Please wait a few minutes and try again.');
+  });
+
+  it('names an expired code as expired rather than wrong', async () => {
+    const { describePhoneAuthError } = await loadModule();
+
+    expect(describePhoneAuthError({ code: 'auth/code-expired' }, 'fallback')).toBe(
+      'That code has expired. Request a new one.'
+    );
+  });
+
+  it('falls back for an unmapped code', async () => {
+    const { describePhoneAuthError } = await loadModule();
+
+    expect(describePhoneAuthError({ code: 'auth/internal-error' }, 'fallback')).toBe('fallback');
+  });
+
+  it('falls back for a plain Error and for nothing at all', async () => {
+    const { describePhoneAuthError } = await loadModule();
+
+    expect(describePhoneAuthError(new Error('boom'), 'fallback')).toBe('fallback');
+    expect(describePhoneAuthError(undefined, 'fallback')).toBe('fallback');
+  });
+});
+
 describe('sendFirebasePhoneOtp', () => {
   it('sends to the E.164 form of the number and caches the confirmation result', async () => {
     const confirmation = { confirm: vi.fn() };

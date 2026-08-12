@@ -14,7 +14,12 @@
 }
 
 .otp-box {
-  width: 44px;
+  /* Six 44px boxes plus gaps overflowed a 320px viewport once card padding was taken into
+     account. Flex-basis with a min lets them shrink to fit narrow phones and stop growing
+     at the comfortable size everywhere else. */
+  flex: 1 1 44px;
+  min-width: 0;
+  max-width: 52px;
   height: 52px;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--color-line);
@@ -39,6 +44,62 @@
 .otp-box.is-filled {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
+}
+
+.otp-box:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Reserved whether or not there is a message, so the card does not jump as the status
+   changes between sending, verifying and idle. */
+.otp-status {
+  min-height: 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--color-ink-soft);
+}
+
+.otp-status__busy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.otp-status__spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--color-primary-soft);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: otp-spin 700ms linear infinite;
+}
+
+@keyframes otp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.otp-boxes.is-shaking {
+  animation: otp-shake 380ms var(--ease-out);
+}
+
+@keyframes otp-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otp-boxes.is-shaking {
+    animation: none;
+  }
+
+  .otp-status__spinner {
+    animation-duration: 2s;
+  }
 }
 
 .otp-resend {

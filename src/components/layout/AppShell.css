@@ -25,15 +25,26 @@
   min-height: 56px;
 }
 
+/* A <button> since it became a home control — hence the resets. Left visually identical
+   to the static brand it replaced: it sits where a logo sits, and dressing it up as a
+   control would read as a second action competing with the account menu. */
 .app-shell__brand {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-lg);
   color: var(--color-primary-dark);
   letter-spacing: 0.01em;
+}
+
+.app-shell__brand:hover {
+  opacity: 0.85;
 }
 
 .app-shell__logo {

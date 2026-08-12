@@ -68,8 +68,11 @@ export default function PatientProfile() {
     }
   }
 
+  // `back` is an explicit path, not history-back: this screen opens from the account menu
+  // on any screen, so `navigate(-1)` sent patients somewhere different each time — and
+  // straight out of the app when they arrived on a deep link.
   return (
-    <AppShell back title="Your profile">
+    <AppShell back="/" title="Your profile">
       <PageTransition>
         <div className="screen patient-profile">
           <div className="patient-profile__intro">

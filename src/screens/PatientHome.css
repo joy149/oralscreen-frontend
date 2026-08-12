@@ -1,0 +1,232 @@
+.patient-home__greeting {
+  margin-bottom: var(--space-5);
+}
+
+.patient-home__greeting p {
+  margin-top: var(--space-2);
+  color: var(--color-ink-faint);
+  font-size: 0.9375rem;
+}
+
+/* --- Primary action ------------------------------------------------------ */
+
+.patient-home__cta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-5);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--gradient-primary);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--duration-fast) var(--ease-smooth),
+    box-shadow var(--duration-normal) var(--ease-smooth);
+}
+
+.patient-home__cta:hover {
+  box-shadow: var(--shadow-elevated);
+}
+
+.patient-home__cta:active {
+  transform: scale(0.99);
+}
+
+.patient-home__cta-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.patient-home__cta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.patient-home__cta-text strong {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  line-height: 1.25;
+}
+
+.patient-home__cta-text small {
+  font-size: var(--text-sm);
+  /* Not --color-* : this sits on the brand gradient, where the ink scale has nothing
+     that holds contrast. Measured 4.9:1 against the gradient's lighter end. */
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.patient-home__cta-chevron {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+/* --- Awaiting-review card ------------------------------------------------ */
+
+/* Chained with .card deliberately. Both rules are single-class, and global.css is injected
+   after the screen stylesheets — so an unchained `.patient-home__awaiting` loses its
+   background and border to `.card` and renders as a plain white row. */
+.card.patient-home__awaiting {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  text-align: left;
+  margin-top: var(--space-4);
+  cursor: pointer;
+  border: 1px solid var(--color-risk-moderate);
+  background: var(--color-risk-moderate-soft);
+  color: var(--color-risk-moderate-ink);
+  transition: box-shadow var(--duration-normal) var(--ease-smooth);
+}
+
+.card.patient-home__awaiting:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.patient-home__awaiting-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  background: rgba(201, 138, 44, 0.16);
+}
+
+.patient-home__awaiting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.patient-home__awaiting-text strong {
+  font-size: 0.9375rem;
+}
+
+.patient-home__awaiting-text small {
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+/* --- Recent screenings --------------------------------------------------- */
+
+.patient-home__recent {
+  margin-top: var(--space-6);
+}
+
+.patient-home__recent-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.patient-home__recent-head h2 {
+  font-size: var(--text-lg);
+}
+
+.patient-home__see-all {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  padding: var(--space-1) 0;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.patient-home__see-all:hover {
+  text-decoration: underline;
+}
+
+.patient-home__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.card.patient-home__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
+  transition: box-shadow var(--duration-normal) var(--ease-smooth),
+    border-color var(--duration-normal) var(--ease-smooth);
+}
+
+.card.patient-home__row:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.patient-home__row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.patient-home__row-main strong {
+  font-size: 0.9375rem;
+}
+
+/* Scoped copies rather than a reach into PastAssessments.css: these rows must not
+   depend on another screen's stylesheet having been loaded first. */
+.patient-home__row-main .is-reviewed,
+.patient-home__row-main .is-awaiting {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+}
+
+.patient-home__row-main .is-reviewed { color: var(--color-ink-soft); }
+.patient-home__row-main .is-awaiting { color: var(--color-ink-faint); }
+
+.patient-home__row-main .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.patient-home__row-main .is-reviewed .status-dot { background: var(--color-success); }
+.patient-home__row-main .is-awaiting .status-dot { background: var(--color-risk-moderate); }
+
+.patient-home__empty {
+  color: var(--color-ink-faint);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.patient-home__notice {
+  text-align: center;
+}
+
+.patient-home__notice p {
+  color: var(--color-ink-faint);
+  font-size: 0.9375rem;
+  margin-bottom: var(--space-4);
+}

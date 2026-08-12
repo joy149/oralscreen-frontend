@@ -61,11 +61,12 @@ describe('the trigger', () => {
 });
 
 describe('menu items', () => {
-  it('lists the four patient actions', async () => {
+  it('lists the five patient actions', async () => {
     const { user, trigger } = setup();
     await user.click(trigger);
 
     expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual([
+      'Home',
       'New assessment',
       'Profile',
       'Past Assessments',
@@ -74,6 +75,9 @@ describe('menu items', () => {
   });
 
   it.each([
+    // Home is the only way back to the landing screen from the questionnaire flow, where
+    // the shell renders the brand instead of a back control.
+    ['Home', '/'],
     ['New assessment', '/questionnaire'],
     ['Profile', '/profile'],
     ['Past Assessments', '/assessments'],

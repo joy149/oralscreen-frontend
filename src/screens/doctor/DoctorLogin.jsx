@@ -1,11 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../../api/client';
 import { createDoctorSession, useDoctorSession } from '../../context/DoctorSessionContext';
 import PageTransition from '../../components/shared/PageTransition';
 import OtpInput from '../../components/shared/OtpInput';
 import oralscreenLogo from '../../assets/oralscreen-mark.png';
-import { auth, setupRecaptcha, sendFirebasePhoneOtp, firebaseSignOut } from '../../config/firebase';
+import {
+  auth,
+  warmRecaptcha,
+  sendFirebasePhoneOtp,
+  firebaseSignOut,
+  describePhoneAuthError,
+} from '../../config/firebase';
 import './DoctorLogin.css';
 
 export default function DoctorLogin() {
@@ -20,6 +26,13 @@ export default function DoctorLogin() {
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [otpError, setOtpError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // The dispatch itself is deliberately not surfaced — only its failure is.
+  const [sendFailed, setSendFailed] = useState(false);
+  const [otpResetSignal, setOtpResetSignal] = useState(0);
+  const [codeSentAt, setCodeSentAt] = useState(null);
+  // The in-flight send. `handleVerifyOtp` awaits it, because the boxes are live before it
+  // resolves and a code typed early must not be met with "session expired".
+  const sendRef = useRef(null);
   const [error, setError] = useState('');
 
   const phoneValid = /^\d{10}$/.test(phoneNumber);
@@ -31,35 +44,67 @@ export default function DoctorLogin() {
   // the two screens redirect at each other in a loop.
   useEffect(() => {
     firebaseSignOut();
+    // Pull reCAPTCHA down now rather than on the send — see the note in config/firebase.
+    try {
+      warmRecaptcha();
+    } catch (_) {
+      // A cold send still works; it is just slower.
+    }
   }, []);
 
   function resetToPhone(message = '') {
     setStep('phone');
     setName('');
     setConfirmationResult(null);
+    sendRef.current = null;
+    setSendFailed(false);
     setOtpError('');
+    setCodeSentAt(null);
     setError(message);
     firebaseSignOut();
   }
 
+  /** Dispatches a code. Shared by the initial send and the resend. */
+  function dispatchOtp({ onFailure }) {
+    setSendFailed(false);
+    setCodeSentAt(Date.now());
+
+    const inFlight = (async () => {
+      try {
+        // No verifier passed — the shared warmed one is reused rather than rebuilt per send.
+        const result = await sendFirebasePhoneOtp(phoneNumber);
+        setConfirmationResult(result);
+        return result;
+      } catch (err) {
+        console.error('Firebase SMS OTP failed:', err);
+        setConfirmationResult(null);
+        setSendFailed(true);
+        // Nothing went out, so there is nothing for a cooldown to protect.
+        setCodeSentAt(null);
+        onFailure(err);
+        return null;
+      }
+    })();
+
+    sendRef.current = inFlight;
+    return inFlight;
+  }
+
   // Step 1: Send OTP immediately from the phone entry form
-  async function handlePhoneSubmit(event) {
+  function handlePhoneSubmit(event) {
     event.preventDefault();
     if (!phoneValid) return;
     setError('');
     setOtpError('');
-    setSubmitting(true);
-    try {
-      const verifier = setupRecaptcha('recaptcha-container');
-      const result = await sendFirebasePhoneOtp(phoneNumber, verifier);
-      setConfirmationResult(result);
-      setStep('otp');
-    } catch (err) {
-      console.error('Firebase SMS OTP failed:', err);
-      setError('Could not send OTP. Please check your number and try again.');
-    } finally {
-      setSubmitting(false);
-    }
+    // Show the verification step straight away and send underneath it, so the doctor is not
+    // held on the phone form for the reCAPTCHA-plus-network round trip.
+    setStep('otp');
+    dispatchOtp({
+      onFailure: (err) =>
+        setOtpError(
+          describePhoneAuthError(err, 'Could not send OTP. Please check your number and try again.')
+        ),
+    });
   }
 
   // Step 2: Verify OTP, then check if doctor exists
@@ -67,15 +112,21 @@ export default function DoctorLogin() {
     setOtpError('');
     setSubmitting(true);
     try {
-      if (!confirmationResult || !confirmationResult.confirm) {
+      // The send may still be in flight — the boxes go live with the step, before it
+      // resolves. Wait for it rather than reporting a session that simply has not landed.
+      const confirmation = (await sendRef.current) || confirmationResult;
+      if (!confirmation || !confirmation.confirm) {
         throw new Error('OTP session expired. Please request a new code.');
       }
-      await confirmationResult.confirm(otpCode);
+      await confirmation.confirm(otpCode);
 
       // OTP verified — now check doctor status with a valid Firebase token
       await checkAndRoute();
     } catch (err) {
-      setOtpError(err?.message || 'Invalid or expired OTP code. Please try again.');
+      setOtpError(
+        describePhoneAuthError(err, err?.message || 'Invalid or expired OTP code. Please try again.')
+      );
+      setOtpResetSignal((n) => n + 1);
       setSubmitting(false);
     }
   }
@@ -168,25 +219,19 @@ export default function DoctorLogin() {
   }
 
   // Resend OTP (used by OtpInput component)
-  async function resendOtp() {
+  function resendOtp() {
     setError('');
     setOtpError('');
-    setSubmitting(true);
-    try {
-      const verifier = setupRecaptcha('recaptcha-container');
-      const result = await sendFirebasePhoneOtp(phoneNumber, verifier);
-      setConfirmationResult(result);
-    } catch (err) {
-      console.error('Firebase SMS OTP resend failed:', err);
-      setOtpError('Could not resend OTP. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
+    return dispatchOtp({
+      onFailure: (err) =>
+        setOtpError(describePhoneAuthError(err, 'Could not resend OTP. Please try again.')),
+    });
   }
 
   return (
     <div className="doctor-login">
-      <div id="recaptcha-container"></div>
+      {/* No reCAPTCHA container here on purpose: it is created on <body> by
+          config/firebase so one warmed verifier can outlive this screen. */}
       <PageTransition>
         <header className="doctor-login__brand">
           <img src={oralscreenLogo} alt="" className="doctor-login__logo" />
@@ -217,8 +262,10 @@ export default function DoctorLogin() {
                     autoFocus
                   />
                 </div>
-                <button className="btn btn-primary" disabled={!phoneValid || submitting}>
-                  {submitting ? 'Sending OTP...' : 'Send Verification OTP'}
+                {/* No pending state needed: the OTP step takes over on tap and reports
+                    progress there. */}
+                <button className="btn btn-primary" disabled={!phoneValid}>
+                  Send Verification OTP
                 </button>
               </form>
             )}
@@ -226,10 +273,20 @@ export default function DoctorLogin() {
             {step === 'otp' && (
               <div className="doctor-login__otp">
                 <h2>Verify your number</h2>
-                <p>Enter 6-digit code sent to <strong>+91 {phoneNumber}</strong></p>
+                <p>
+                  {/* Reads as sent from the moment the step opens, so the wait belongs to
+                      the SMS rather than to the app. Only an actual failure walks it back. */}
+                  {sendFailed ? "We'll text a 6-digit code to" : 'Enter 6-digit code sent to'}{' '}
+                  <strong>+91 {phoneNumber}</strong>
+                </p>
                 <OtpInput
                   length={6}
                   submitting={submitting}
+                  // Only closed once a send has actually failed. While one is in flight the
+                  // boxes stay live — `handleVerifyOtp` waits for it.
+                  disabled={sendFailed}
+                  cooldownStartedAt={codeSentAt}
+                  resetSignal={otpResetSignal}
                   onComplete={handleVerifyOtp}
                   onResend={resendOtp}
                 />

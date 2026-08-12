@@ -8,7 +8,12 @@ import { api, ApiError, DEFAULT_SEX_OPTIONS } from '../api/client';
 import { usePatient } from '../context/PatientContext';
 import { ShieldCheck, Stethoscope, Clock, Sparkles, ArrowLeft } from 'lucide-react';
 import PrivacyPolicyModal from '../components/shared/PrivacyPolicyModal';
-import { setupRecaptcha, sendFirebasePhoneOtp, formatE164Phone } from '../config/firebase';
+import {
+  warmRecaptcha,
+  sendFirebasePhoneOtp,
+  formatE164Phone,
+  describePhoneAuthError,
+} from '../config/firebase';
 import './PhoneEntry.css';
 
 export default function PhoneEntry() {
@@ -31,6 +36,17 @@ export default function PhoneEntry() {
   const [sexOptions, setSexOptions] = useState([]);
   const [loadingSexOptions, setLoadingSexOptions] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  // The dispatch itself is deliberately not surfaced — only its failure is.
+  const [sendFailed, setSendFailed] = useState(false);
+  // Bumped to tell OtpInput to clear itself after a rejected code.
+  const [otpResetSignal, setOtpResetSignal] = useState(0);
+  // Anchors the resend cooldown. Set when the code is *requested*, not when the send
+  // resolves, so the countdown starts with the screen rather than jumping a second later.
+  const [codeSentAt, setCodeSentAt] = useState(null);
+  // The in-flight send. `handleVerifyOtp` awaits it, because the boxes are live before it
+  // resolves and a code typed early must not be met with "session expired".
+  const sendRef = useRef(null);
   const [error, setError] = useState(null);
 
   const isPhoneValid = /^\d{10}$/.test(phoneNumber.trim());
@@ -60,48 +76,65 @@ export default function PhoneEntry() {
   }, []);
 
   useEffect(() => {
-    // Initialize invisible reCAPTCHA container
+    // Download and render reCAPTCHA now, while the patient is still typing their number.
+    // Constructing the verifier alone fetches nothing — it is `render()`, which this calls,
+    // that pulls the script and builds the widget. Doing it here takes that off the send.
     try {
-      setupRecaptcha('recaptcha-container');
+      warmRecaptcha();
     } catch (_) {
-      // ignore
+      // A cold send still works; it is just slower.
     }
   }, []);
 
-  async function sendOtpCode() {
+  function sendOtpCode() {
     setError(null);
     setOtpError('');
-    setSubmitting(true);
-    try {
-      // Re-initialize RecaptchaVerifier for clean state
-      const verifier = setupRecaptcha('recaptcha-container');
-      const result = await sendFirebasePhoneOtp(phoneNumber.trim(), verifier);
-      setConfirmationResult(result);
-      setStage('otp');
-    } catch (err) {
-      console.error('Firebase SMS OTP error:', err);
-      const message = err?.message || 'Failed to send SMS OTP.';
-      setOtpError(`SMS Error: ${message}`);
-    } finally {
-      setSubmitting(false);
-    }
+    setSendFailed(false);
+    setCodeSentAt(Date.now());
+
+    const inFlight = (async () => {
+      try {
+        // No verifier is passed: the shared warmed one is reused rather than rebuilt per send.
+        const result = await sendFirebasePhoneOtp(phoneNumber.trim());
+        setConfirmationResult(result);
+        return result;
+      } catch (err) {
+        console.error('Firebase SMS OTP error:', err);
+        setConfirmationResult(null);
+        setSendFailed(true);
+        // Nothing went out, so there is nothing for a cooldown to protect.
+        setCodeSentAt(null);
+        setOtpError(describePhoneAuthError(err, 'We could not send the code. Please try again.'));
+        return null;
+      }
+    })();
+
+    sendRef.current = inFlight;
+    return inFlight;
   }
 
-  async function handlePhoneSubmit(e) {
+  function handlePhoneSubmit(e) {
     e.preventDefault();
     if (!isPhoneValid) return;
-    await sendOtpCode();
+    // Move to the OTP stage immediately and let the send run underneath it. Waiting for
+    // signInWithPhoneNumber to resolve before switching meant the patient watched the phone
+    // form for the whole reCAPTCHA-plus-network round trip; the code cannot arrive before
+    // the send resolves anyway, so nothing is lost by showing the next screen first.
+    setStage('otp');
+    sendOtpCode();
   }
 
   async function handleVerifyOtp(otpCode) {
     setOtpError('');
-    setSubmitting(true);
+    setVerifying(true);
     try {
-      // Verify OTP with Firebase
-      if (!confirmationResult || !confirmationResult.confirm) {
+      // The send may still be in flight — the boxes go live with the screen, before it
+      // resolves. Wait for it rather than reporting a session that simply has not landed.
+      const confirmation = (await sendRef.current) || confirmationResult;
+      if (!confirmation || !confirmation.confirm) {
         throw new Error('OTP session expired. Please request a new code.');
       }
-      await confirmationResult.confirm(otpCode);
+      await confirmation.confirm(otpCode);
 
       // Fetch or create patient profile after OTP verification.
       // The server uses the token's phone regardless, but send the canonical form so the
@@ -109,7 +142,11 @@ export default function PhoneEntry() {
       try {
         const patient = await api.findOrCreatePatient({ phoneNumber: formatE164Phone(phoneNumber.trim()) });
         setPatient(patient);
-        navigate('/questionnaire');
+        // Reaching here without a 404 means the record already existed — a returning
+        // patient, as likely to be checking a result as starting a screening. Home offers
+        // both; a first-time registration (handleDetailsSubmit) still goes straight to the
+        // questionnaire, where home would only show them an empty history.
+        navigate('/');
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
           setStage('details');
@@ -118,9 +155,14 @@ export default function PhoneEntry() {
         }
       }
     } catch (err) {
-      setOtpError(err?.message || 'Invalid or expired OTP code. Please try again.');
+      setOtpError(
+        describePhoneAuthError(err, err?.message || 'Invalid or expired OTP code. Please try again.')
+      );
+      // Clear the boxes and put the cursor back on the first one rather than leaving the
+      // rejected digits sitting there for the patient to delete.
+      setOtpResetSignal((n) => n + 1);
     } finally {
-      setSubmitting(false);
+      setVerifying(false);
     }
   }
 
@@ -159,7 +201,8 @@ export default function PhoneEntry() {
     <AppShell clinicianLink>
       <PageTransition>
         <div className="screen phone-entry">
-          <div id="recaptcha-container"></div>
+          {/* No reCAPTCHA container here on purpose: it is created on <body> by
+              config/firebase so one warmed verifier can outlive this screen. */}
 
           {/* The Patient/Doctor switch used to sit here, above the hero. Nearly
               all traffic is patients, so the staff entrance no longer occupies
@@ -211,8 +254,10 @@ export default function PhoneEntry() {
                   aria-describedby="phone-hint"
                 />
               </div>
-              <button type="submit" className="btn btn-primary" disabled={!isPhoneValid || submitting}>
-                {submitting ? 'Sending OTP…' : 'Send Verification OTP'}
+              {/* No pending state needed: the OTP stage takes over on tap and reports
+                  progress there. */}
+              <button type="submit" className="btn btn-primary" disabled={!isPhoneValid}>
+                Send Verification OTP
               </button>
             </form>
           )}
@@ -222,23 +267,45 @@ export default function PhoneEntry() {
               <button
                 type="button"
                 className="phone-entry__back-btn"
-                onClick={() => setStage('phone')}
+                onClick={() => {
+                  setStage('phone');
+                  // Drop the confirmation too — otherwise a code from the previous number
+                  // stays live and can be confirmed against a freshly typed one.
+                  setConfirmationResult(null);
+                  sendRef.current = null;
+                  setSendFailed(false);
+                  setOtpError('');
+                }}
               >
                 <ArrowLeft size={16} /> Change mobile number
               </button>
               <div className="phone-entry__otp-header">
                 <h2>Enter 6-digit OTP</h2>
-                <p>Sent via SMS to <strong>+91 {phoneNumber}</strong></p>
+                <p>
+                  {/* Reads as sent from the moment the screen opens, so the wait belongs to
+                      the SMS rather than to the app. Only an actual failure walks it back. */}
+                  {sendFailed ? "We'll text a code to" : 'Sent via SMS to'}{' '}
+                  <strong>+91 {phoneNumber}</strong>
+                </p>
               </div>
 
               <OtpInput
                 length={6}
-                submitting={submitting}
+                submitting={verifying}
+                // Only closed once a send has actually failed. While one is in flight the
+                // boxes stay live — `handleVerifyOtp` waits for it.
+                disabled={sendFailed}
+                cooldownStartedAt={codeSentAt}
+                resetSignal={otpResetSignal}
                 onComplete={handleVerifyOtp}
                 onResend={sendOtpCode}
               />
 
-              {otpError && <p className="error-text text-center">{otpError}</p>}
+              {otpError && (
+                <p className="error-text text-center" role="alert">
+                  {otpError}
+                </p>
+              )}
             </div>
           )}
 

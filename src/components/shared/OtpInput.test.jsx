@@ -62,12 +62,63 @@ describe('typing a code', () => {
     expect(boxes()[0]).toHaveValue('');
   });
 
-  it('keeps only the last digit when a box already holds one', () => {
+  /**
+   * Android delivers an SMS autofill as one change event carrying the whole code on the
+   * focused box, not as a paste. Keeping only the last character silently dropped five of
+   * six digits, so autofill looked broken and the patient retyped the code by hand.
+   */
+  it('spreads a multi-digit change across the boxes — the Android autofill path', () => {
+    const onComplete = vi.fn();
+    render(<OtpInput onComplete={onComplete} />);
+
+    fireEvent.change(boxes()[0], { target: { value: '123456' } });
+
+    expect(boxes().map((b) => b.value)).toEqual(['1', '2', '3', '4', '5', '6']);
+    expect(onComplete).toHaveBeenCalledWith('123456');
+  });
+
+  it('does not truncate autofill at one character', () => {
+    render(<OtpInput />);
+
+    // maxLength has to admit the whole code or the browser clips it before React sees it.
+    expect(boxes()[0]).toHaveAttribute('maxLength', '6');
+  });
+
+  it('stops at the last box when the change carries more digits than fit', () => {
+    const onComplete = vi.fn();
+    render(<OtpInput length={4} onComplete={onComplete} />);
+
+    fireEvent.change(boxes()[0], { target: { value: '123456' } });
+
+    expect(boxes().map((b) => b.value)).toEqual(['1', '2', '3', '4']);
+    expect(onComplete).toHaveBeenCalledWith('1234');
+  });
+
+  it('overwrites rather than shifting when typing into a box that already holds a digit', () => {
     render(<OtpInput length={2} />);
 
-    fireEvent.change(boxes()[0], { target: { value: '12' } });
+    fireEvent.change(boxes()[0], { target: { value: '1' } });
+    // What the browser reports when a character is typed after the existing one.
+    fireEvent.change(boxes()[0], { target: { value: '19' } });
 
-    expect(boxes()[0]).toHaveValue('2');
+    expect(boxes()[0]).toHaveValue('9');
+    expect(boxes()[1]).toHaveValue('');
+  });
+
+  it('offers the code to iOS autofill from the first box only', () => {
+    render(<OtpInput />);
+
+    expect(boxes()[0]).toHaveAttribute('autocomplete', 'one-time-code');
+    expect(boxes()[1]).toHaveAttribute('autocomplete', 'off');
+  });
+
+  it('clears a box when its content is deleted', () => {
+    render(<OtpInput length={2} />);
+
+    fireEvent.change(boxes()[0], { target: { value: '1' } });
+    fireEvent.change(boxes()[0], { target: { value: '' } });
+
+    expect(boxes()[0]).toHaveValue('');
   });
 
   it('marks a filled box so it can be styled', async () => {
@@ -111,6 +162,76 @@ describe('typing a code', () => {
   });
 });
 
+describe('re-submitting', () => {
+  it('does not fire onComplete again when a filled code is edited', () => {
+    const onComplete = vi.fn();
+    render(<OtpInput length={2} onComplete={onComplete} />);
+
+    fireEvent.change(boxes()[0], { target: { value: '12' } });
+    expect(onComplete).toHaveBeenCalledTimes(1);
+
+    // Correcting a digit while all boxes are full used to re-submit on every keystroke.
+    fireEvent.change(boxes()[1], { target: { value: '2' } });
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('fires again once the code actually changes', () => {
+    const onComplete = vi.fn();
+    render(<OtpInput length={2} onComplete={onComplete} />);
+
+    fireEvent.change(boxes()[0], { target: { value: '12' } });
+    fireEvent.change(boxes()[1], { target: { value: '3' } });
+
+    expect(onComplete).toHaveBeenNthCalledWith(1, '12');
+    expect(onComplete).toHaveBeenNthCalledWith(2, '13');
+  });
+});
+
+describe('reacting to a rejected code', () => {
+  it('clears the boxes and returns focus when resetSignal changes', () => {
+    const { rerender } = render(<OtpInput length={2} resetSignal={0} />);
+    fireEvent.change(boxes()[0], { target: { value: '12' } });
+
+    rerender(<OtpInput length={2} resetSignal={1} />);
+
+    expect(boxes().map((b) => b.value)).toEqual(['', '']);
+    expect(boxes()[0]).toHaveFocus();
+  });
+
+  it('lets the same code be submitted again after a reset', () => {
+    const onComplete = vi.fn();
+    const { rerender } = render(<OtpInput length={2} onComplete={onComplete} resetSignal={0} />);
+    fireEvent.change(boxes()[0], { target: { value: '12' } });
+
+    rerender(<OtpInput length={2} onComplete={onComplete} resetSignal={1} />);
+    fireEvent.change(boxes()[0], { target: { value: '12' } });
+
+    expect(onComplete).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('progress feedback', () => {
+  it('says nothing while the patient is typing', () => {
+    render(<OtpInput />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('');
+  });
+
+  it('reports a code being checked, rather than just greying the boxes out', () => {
+    render(<OtpInput submitting />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Verifying…');
+  });
+
+  it('closes the boxes when no code is outstanding, but leaves resend open', () => {
+    // A failed send leaves nothing to type; resending is the way out, so it must stay live.
+    render(<OtpInput disabled resendCooldown={0} />);
+
+    boxes().forEach((box) => expect(box).toBeDisabled());
+    expect(screen.getByRole('button', { name: 'Resend OTP Code' })).toBeEnabled();
+  });
+});
+
 describe('backspace', () => {
   it('steps back to the previous box when the current one is empty', async () => {
     const user = userEvent.setup();
@@ -141,6 +262,46 @@ describe('backspace', () => {
     await user.keyboard('{Backspace}');
 
     expect(boxes()[0]).toHaveFocus();
+  });
+
+  it('deletes the previous digit as it steps back — one press per digit, not two', async () => {
+    const user = userEvent.setup();
+    render(<OtpInput length={2} />);
+
+    fireEvent.change(boxes()[0], { target: { value: '1' } });
+    expect(boxes()[1]).toHaveFocus();
+
+    await user.keyboard('{Backspace}');
+
+    expect(boxes()[0]).toHaveValue('');
+    expect(boxes()[0]).toHaveFocus();
+  });
+});
+
+describe('arrow keys', () => {
+  it('moves left and right between boxes', async () => {
+    const user = userEvent.setup();
+    render(<OtpInput />);
+
+    boxes()[2].focus();
+    await user.keyboard('{ArrowLeft}');
+    expect(boxes()[1]).toHaveFocus();
+
+    await user.keyboard('{ArrowRight}');
+    expect(boxes()[2]).toHaveFocus();
+  });
+
+  it('does not run off either end', async () => {
+    const user = userEvent.setup();
+    render(<OtpInput length={2} />);
+
+    boxes()[0].focus();
+    await user.keyboard('{ArrowLeft}');
+    expect(boxes()[0]).toHaveFocus();
+
+    boxes()[1].focus();
+    await user.keyboard('{ArrowRight}');
+    expect(boxes()[1]).toHaveFocus();
   });
 });
 
@@ -253,5 +414,33 @@ describe('resend cooldown', () => {
     act(() => vi.advanceTimersByTime(1000));
 
     expect(screen.getByRole('button', { name: 'Resend OTP Code' })).toBeDisabled();
+  });
+
+  it('runs no cooldown until a code has actually gone out', () => {
+    // The parent shows this screen before the send resolves, so a cooldown anchored to mount
+    // would start counting against a code that does not exist yet.
+    render(<OtpInput resendCooldown={30} cooldownStartedAt={null} />);
+
+    expect(screen.getByRole('button', { name: 'Resend OTP Code' })).toBeInTheDocument();
+  });
+
+  it('starts counting from the moment the code was sent', () => {
+    const { rerender } = render(<OtpInput resendCooldown={3} cooldownStartedAt={null} />);
+
+    rerender(<OtpInput resendCooldown={3} cooldownStartedAt={Date.now()} />);
+
+    expect(screen.getByText('3s')).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(1000));
+    expect(screen.getByText('2s')).toBeInTheDocument();
+  });
+
+  it('reports the remaining time from the clock, not from ticks it may have missed', () => {
+    // Mobile browsers throttle intervals in a backgrounded tab. Counting ticks left the
+    // number frozen where it was when the patient switched to their SMS app.
+    render(<OtpInput resendCooldown={30} />);
+
+    act(() => vi.advanceTimersByTime(10000));
+
+    expect(screen.getByText('20s')).toBeInTheDocument();
   });
 });

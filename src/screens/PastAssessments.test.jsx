@@ -65,6 +65,17 @@ describe('access', () => {
 
     expect(screen.getByText('Sign in screen')).toBeInTheDocument();
   });
+
+  // History-back was actively wrong here: arriving from a result detail — which itself
+  // backs out to this list — made "back" return to the screen just left.
+  it('sends the back control to the landing screen', async () => {
+    apiMock.getPatientAssessments.mockResolvedValue([]);
+    const { user } = renderList();
+
+    await user.click(screen.getByRole('button', { name: 'Go back' }));
+
+    expect(navigate).toHaveBeenCalledWith('/');
+  });
 });
 
 describe('loading', () => {

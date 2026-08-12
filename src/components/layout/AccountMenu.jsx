@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, UserRound, History, LogOut, PlusCircle } from 'lucide-react';
+import { User, UserRound, History, LogOut, PlusCircle, Home } from 'lucide-react';
 import { usePatient } from '../../context/PatientContext';
 import './AccountMenu.css';
 
@@ -55,6 +55,15 @@ export default function AccountMenu() {
 
       {open && (
         <div className="account-menu__dropdown" role="menu">
+          {/* The only route home from the questionnaire flow, where the shell shows the
+              brand rather than a back control and the brand is not a link. Behind two
+              deliberate taps on purpose: like "New assessment" below it, leaving mid-
+              screening abandons the current one, which is not something to put one stray
+              tap away from a patient part-way through. */}
+          <button type="button" role="menuitem" className="account-menu__item" onClick={() => go('/')}>
+            <Home size={16} />
+            <span>Home</span>
+          </button>
           <button type="button" role="menuitem" className="account-menu__item" onClick={() => go('/questionnaire')}>
             <PlusCircle size={16} />
             <span>New assessment</span>

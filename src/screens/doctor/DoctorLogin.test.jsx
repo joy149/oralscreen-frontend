@@ -8,7 +8,7 @@ import { routerFuture } from '../../test/utils';
 
 const navigate = vi.fn();
 const setSession = vi.fn();
-const setupRecaptcha = vi.fn();
+const warmRecaptcha = vi.fn();
 const sendFirebasePhoneOtp = vi.fn();
 const firebaseSignOut = vi.fn();
 // Hoisted: the `vi.mock` factory below reads `auth` eagerly, before a plain `const` in
@@ -32,9 +32,10 @@ vi.mock('../../context/DoctorSessionContext', async (importOriginal) => ({
 
 vi.mock('../../config/firebase', () => ({
   auth: mockAuth,
-  setupRecaptcha: (...a) => setupRecaptcha(...a),
+  warmRecaptcha: (...a) => warmRecaptcha(...a),
   sendFirebasePhoneOtp: (...a) => sendFirebasePhoneOtp(...a),
   firebaseSignOut: (...a) => firebaseSignOut(...a),
+  describePhoneAuthError: (_err, fallback) => fallback,
   // api/client imports this at module load, and DoctorSessionContext pulls the real
   // module in through importOriginal — the mock has to be complete.
   getFirebaseToken: vi.fn().mockResolvedValue('token'),
@@ -55,10 +56,15 @@ function renderLogin({ from } = {}) {
   return { user };
 }
 
+/**
+ * The step switches optimistically now, so this also waits for the send itself to settle —
+ * the boxes stay disabled until then.
+ */
 async function reachOtpStep(user, phone = '9876543210') {
   await user.type(screen.getByLabelText('Mobile number'), phone);
   await user.click(screen.getByRole('button', { name: 'Send Verification OTP' }));
   await screen.findByRole('heading', { name: 'Verify your number' });
+  await waitFor(() => expect(screen.getByLabelText('Digit 1 of 6')).toBeEnabled());
 }
 
 function typeOtp(user, code = '123456') {
@@ -74,7 +80,8 @@ beforeEach(() => {
   mockAuth.currentUser = null;
   vi.spyOn(console, 'error').mockImplementation(() => {});
   confirm = vi.fn().mockResolvedValue({});
-  setupRecaptcha.mockReturnValue({ id: 'verifier' });
+  warmRecaptcha.mockReset();
+  warmRecaptcha.mockResolvedValue({ id: 'verifier' });
   sendFirebasePhoneOtp.mockResolvedValue({ confirm });
 });
 
@@ -111,17 +118,61 @@ describe('the phone step', () => {
     expect(screen.getByRole('button', { name: 'Send Verification OTP' })).toBeEnabled();
   });
 
-  it('sends the OTP and moves to the verification step', async () => {
+  it('sends with the shared warmed verifier rather than passing a freshly built one', async () => {
     const { user } = renderLogin();
 
     await reachOtpStep(user);
 
-    expect(setupRecaptcha).toHaveBeenCalledWith('recaptcha-container');
-    expect(sendFirebasePhoneOtp).toHaveBeenCalledWith('9876543210', { id: 'verifier' });
+    expect(sendFirebasePhoneOtp).toHaveBeenCalledWith('9876543210');
     expect(screen.getByText('+91 9876543210')).toBeInTheDocument();
   });
 
-  it('reports a send failure as an alert and stays put', async () => {
+  it('warms reCAPTCHA on mount so the send does not pay to load it', () => {
+    renderLogin();
+
+    expect(warmRecaptcha).toHaveBeenCalled();
+  });
+
+  it('survives reCAPTCHA warm-up throwing on mount', () => {
+    warmRecaptcha.mockImplementationOnce(() => {
+      throw new Error('no container');
+    });
+
+    expect(() => renderLogin()).not.toThrow();
+    expect(screen.getByLabelText('Mobile number')).toBeInTheDocument();
+  });
+
+  /** As on the patient screen, the dispatch is deliberately never narrated. */
+  it('shows the verification step as ready immediately, without narrating the send', async () => {
+    sendFirebasePhoneOtp.mockReturnValue(new Promise(() => {}));
+    const { user } = renderLogin();
+
+    await user.type(screen.getByLabelText('Mobile number'), '9876543210');
+    await user.click(screen.getByRole('button', { name: 'Send Verification OTP' }));
+
+    expect(await screen.findByRole('heading', { name: 'Verify your number' })).toBeInTheDocument();
+    expect(screen.getByText(/Enter 6-digit code sent to/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Digit 1 of 6')).toBeEnabled();
+    expect(screen.getByRole('status')).toHaveTextContent('');
+  });
+
+  it('accepts a code typed before the send has resolved', async () => {
+    let resolveSend;
+    sendFirebasePhoneOtp.mockReturnValue(new Promise((r) => { resolveSend = r; }));
+    apiMock.checkDoctor.mockResolvedValue({ exists: false });
+    const { user } = renderLogin();
+
+    await user.type(screen.getByLabelText('Mobile number'), '9876543210');
+    await user.click(screen.getByRole('button', { name: 'Send Verification OTP' }));
+    await screen.findByRole('heading', { name: 'Verify your number' });
+
+    await typeOtp(user);
+    resolveSend({ confirm });
+
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith('123456'));
+  });
+
+  it('reports a send failure as an alert on the verification step', async () => {
     sendFirebasePhoneOtp.mockRejectedValue(new Error('quota'));
     const { user } = renderLogin();
 
@@ -131,6 +182,20 @@ describe('the phone step', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Could not send OTP. Please check your number and try again.'
     );
+    // No code went out, so a resend is available with no cooldown to wait out.
+    expect(await screen.findByRole('button', { name: 'Resend OTP Code' })).toBeEnabled();
+  });
+
+  it('can back out to the phone step after a failed send', async () => {
+    sendFirebasePhoneOtp.mockRejectedValue(new Error('quota'));
+    const { user } = renderLogin();
+
+    await user.type(screen.getByLabelText('Mobile number'), '9876543210');
+    await user.click(screen.getByRole('button', { name: 'Send Verification OTP' }));
+    await screen.findByRole('alert');
+
+    await user.click(screen.getByRole('button', { name: 'Change number' }));
+
     expect(screen.getByLabelText('Mobile number')).toBeInTheDocument();
   });
 });
@@ -194,7 +259,7 @@ describe('the OTP step', () => {
       vi.useRealTimers();
     });
 
-    /** Mounts, verifies the number, and waits out OtpInput's 60s resend cooldown. */
+    /** Mounts, verifies the number, and waits out OtpInput's resend cooldown. */
     async function reachResendableOtp() {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       renderLogin();

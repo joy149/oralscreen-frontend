@@ -8,28 +8,9 @@ import RiskTier from '../components/doctor/RiskTier';
 import { api } from '../api/client';
 import { usePatient } from '../context/PatientContext';
 import useSessionRecovery from '../hooks/useSessionRecovery';
+import relativeTime from '../utils/relativeTime';
+import { assessmentItems, byNewestFirst } from '../utils/assessments';
 import './PastAssessments.css';
-
-function relativeTime(value) {
-  const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return 'Unknown date';
-  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
-  if (seconds < 60) return 'Just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-  return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(timestamp);
-}
-
-// A response that isn't a bare array (e.g. wrapped in { content: [...] }) shouldn't
-// crash the list — normalize defensively, mirroring DoctorQueue's queueItems().
-function assessmentItems(payload) {
-  if (Array.isArray(payload)) return payload;
-  for (const key of ['content', 'assessments', 'data']) {
-    if (Array.isArray(payload?.[key])) return payload[key];
-  }
-  return [];
-}
 
 function ListSkeleton() {
   return (
@@ -61,7 +42,9 @@ export default function PastAssessments() {
     setError(null);
     try {
       const payload = await api.getPatientAssessments(patient.id);
-      setItems(assessmentItems(payload));
+      // Same ordering as the home screen's recent rows. Left to the endpoint's own order,
+      // the two could disagree about which screening is the latest.
+      setItems(byNewestFirst(assessmentItems(payload)));
     } catch (err) {
       if (!handleAuthError(err)) setError(err);
     } finally {
@@ -78,8 +61,11 @@ export default function PastAssessments() {
     return <Navigate to="/" replace />;
   }
 
+  // Explicit `back` path for the same reason as PatientProfile — and here history-back was
+  // worse: arriving from a result detail, which itself backs out to this list, made "back"
+  // return to the screen the patient had just left.
   return (
-    <AppShell back title="Past assessments">
+    <AppShell back="/" title="Past assessments">
       <PageTransition>
         <div className="screen past-assessments">
           <div className="past-assessments__intro">

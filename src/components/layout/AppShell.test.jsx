@@ -57,6 +57,25 @@ describe('chrome', () => {
     expect(screen.queryByRole('button', { name: 'Go back' })).not.toBeInTheDocument();
   });
 
+  // One destination for both cases: PatientLanding resolves `/` to the home screen when a
+  // patient is signed in and to phone/OTP entry when not, so the brand does not branch.
+  it('sends the brand to the landing route', async () => {
+    const { user } = setup();
+
+    await user.click(screen.getByRole('button', { name: /OralScreen/ }));
+
+    expect(navigate).toHaveBeenCalledWith('/');
+  });
+
+  it('still routes the brand home for a signed-in patient', async () => {
+    patient = { id: 'p1' };
+    const { user } = setup();
+
+    await user.click(screen.getByRole('button', { name: /OralScreen/ }));
+
+    expect(navigate).toHaveBeenCalledWith('/');
+  });
+
   it('shows the account menu only once a patient is signed in', () => {
     const { rerender } = setup();
     expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument();
