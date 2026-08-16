@@ -15,7 +15,9 @@ const DURATION_OPTIONS = [
   { value: 'DAYS_3_5', label: '3–5 days' },
   { value: 'DAYS_5_7', label: '5–7 days' },
   { value: 'DAYS_7_10', label: '7–10 days' },
-  { value: 'DAYS_10_TO_1_MONTH', label: '10 days – 1 month' },
+  { value: 'DAYS_10_15', label: '10–15 days' },
+  { value: 'DAYS_15_20', label: '15–20 days' },
+  { value: 'DAYS_20_TO_1_MONTH', label: '20 days – 1 month' },
   { value: 'MORE_THAN_1_MONTH', label: 'More than 1 month' },
 ];
 
