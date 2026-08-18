@@ -72,7 +72,7 @@ function SortableHeader({ label, sortKey, activeSort, activeDir, onSort, classNa
 
 export default function DoctorQueue() {
   const navigate = useNavigate();
-  const { session, endSession } = useDoctorSession();
+  const { endSession } = useDoctorSession();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -87,10 +87,13 @@ export default function DoctorQueue() {
     setLoading(true);
     setError(null);
     try {
-      const payload = await api.getDoctorQueue(session.token);
+      const payload = await api.getDoctorQueue();
       setItems(queueItems(payload));
     } catch (err) {
-      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+      // 401 only. 403 now means "signed in but not an approved doctor" — a real message, not
+      // a reason to destroy the session. (The old backend collapsed every 404/409/500 into a
+      // bare 403, so this used to log the doctor out for a merely missing record.)
+      if (err instanceof ApiError && err.status === 401) {
         endSession();
         navigate('/doctor/login', { replace: true });
         return;
@@ -99,7 +102,7 @@ export default function DoctorQueue() {
     } finally {
       setLoading(false);
     }
-  }, [endSession, navigate, session.token]);
+  }, [endSession, navigate]);
 
   useEffect(() => { loadQueue(); }, [loadQueue]);
 

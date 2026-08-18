@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { firebaseSignOut } from '../config/firebase';
 
 const STORAGE_KEY = 'oralscreen_patient';
 
@@ -25,7 +26,11 @@ export function PatientProvider({ children }) {
   }, [patient]);
 
   const setPatient = (next) => setPatientState(next);
-  const clearPatient = () => setPatientState(null);
+
+  const clearPatient = useCallback(() => {
+    setPatientState(null);
+    firebaseSignOut();
+  }, []);
 
   return (
     <PatientContext.Provider value={{ patient, setPatient, clearPatient }}>

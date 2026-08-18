@@ -11,6 +11,7 @@ import { motion } from 'motion/react';
 export default function PageTransition({ children }) {
   return (
     <motion.div
+      className="page-transition"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}

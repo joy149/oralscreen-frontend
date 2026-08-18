@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { HeartHandshake, CheckCircle2 } from 'lucide-react';
+import { HeartHandshake } from 'lucide-react';
 import './HomeCareRecommendations.css';
 
 /**
@@ -92,9 +92,9 @@ export default function HomeCareRecommendations({ recommendations }) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: 0.15 + index * 0.05, ease: [0.4, 0, 0.2, 1] }}
           >
-            <div className="home-care__item-bullet" aria-hidden="true">
-              <CheckCircle2 size={16} />
-            </div>
+            {/* A neutral dot, not a check mark — these are actions to start,
+                not items already completed. */}
+            <span className="home-care__item-bullet" aria-hidden="true" />
             <div className="home-care__item-content">
               {item.title && <h4 className="home-care__item-title">{item.title}</h4>}
               {item.text && <p className="home-care__item-text">{item.text}</p>}

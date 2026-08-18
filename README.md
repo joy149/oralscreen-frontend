@@ -106,13 +106,28 @@ src/
 
 ## Design notes
 
-- Type is system fonts only (Georgia for headings, system sans for body) —
-  deliberately no web-font downloads, since the pilot's patient base may be
-  on slower mobile connections.
-- Risk is shown as a position on a three-zone gauge (mild → moderate → high),
-  not a colored badge, since the classification is a real ordinal scale.
+- Type is Figtree (display) + Noto Sans (body), loaded from Google Fonts via
+  `<link rel="preconnect">` in `index.html`. They are deliberately **not**
+  `@import`-ed from CSS, which would queue the font request behind the
+  stylesheet parse and delay first paint on slow connections.
+- Risk is shown as a verdict block followed by a position on a three-zone gauge
+  (mild → moderate → high), since the classification is a real ordinal scale.
+  The verdict renders first and unanimated — it's the one thing the patient
+  opened the app for, so it must not sit below supporting text.
 - Colors avoid literal traffic-light red/yellow/green, which reads as
   alarming for a health context — sage / amber / clay-red instead.
+- Every risk tier has two tokens: a saturated **fill** (`--color-risk-*`) for
+  gauges and dots, and a darkened **ink** (`--color-risk-*-ink`) for text. The
+  fills do not meet WCAG contrast as type — the moderate fill measured 2.6:1 on
+  its own background. Use the ink variant for anything readable.
+- `--color-line` is a decorative divider only (1.3:1). Interactive boundaries
+  such as form fields use `--color-line-input`, which meets the 3:1 non-text
+  contrast requirement (WCAG 1.4.11).
+- Symptom questions use a segmented Yes/No control rather than toggle switches.
+  A switch implies a setting, and collapses "no" and "not answered" into one
+  state — a distinction the reviewing dentist needs.
+- Clinician and admin routes are lazy-loaded and excluded from the PWA
+  precache, so the patient bundle doesn't carry chart.js and the doctor screens.
 
 ## Next up
 

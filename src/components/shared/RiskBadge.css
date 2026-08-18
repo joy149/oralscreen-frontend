@@ -2,41 +2,98 @@
   width: 100%;
 }
 
+/* Verdict ---------------------------------------------------------------- */
+
+.risk-gauge__result {
+  padding: var(--space-5) var(--space-4);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.risk-gauge__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.risk-gauge__result h2 {
+  font-size: var(--text-2xl);
+  margin-bottom: 0;
+}
+
+.risk-gauge__result p {
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  max-width: 34ch;
+  margin: 0 auto;
+}
+
+/* Fills carry the tier colour; text uses the darkened *-ink variants, since
+   the saturated fills do not meet contrast as type. */
+.risk-gauge__result--no_mild_risk {
+  background: var(--color-risk-mild-soft);
+}
+.risk-gauge__result--no_mild_risk h2,
+.risk-gauge__result--no_mild_risk .risk-gauge__icon {
+  color: var(--color-risk-mild-ink);
+}
+
+.risk-gauge__result--moderate_risk {
+  background: var(--color-risk-moderate-soft);
+}
+.risk-gauge__result--moderate_risk h2,
+.risk-gauge__result--moderate_risk .risk-gauge__icon {
+  color: var(--color-risk-moderate-ink);
+}
+
+.risk-gauge__result--high_risk {
+  background: var(--color-risk-high-soft);
+}
+.risk-gauge__result--high_risk h2,
+.risk-gauge__result--high_risk .risk-gauge__icon {
+  color: var(--color-risk-high-ink);
+}
+
+/* Scale ------------------------------------------------------------------ */
+
+.risk-gauge__scale {
+  display: block;
+  margin-top: var(--space-5);
+  padding: 0 var(--space-1);
+}
+
 .risk-gauge__track {
   position: relative;
   display: flex;
-  height: 12px;
-  border-radius: 999px;
-  overflow: visible;
+  height: 10px;
   gap: 3px;
 }
 
 .risk-gauge__zone {
   flex: 1;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--color-line);
-  opacity: 0.55;
-  transition: opacity 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .risk-gauge__zone--no_mild_risk.is-active {
   background: var(--color-risk-mild);
-  opacity: 1;
 }
 
 .risk-gauge__zone--moderate_risk.is-active {
   background: var(--color-risk-moderate);
-  opacity: 1;
 }
 
 .risk-gauge__zone--high_risk.is-active {
   background: var(--color-risk-high);
-  opacity: 1;
 }
 
 .risk-gauge__marker {
   position: absolute;
-  top: -5px;
+  top: -6px;
   width: 22px;
   height: 22px;
   margin-left: -11px;
@@ -48,9 +105,8 @@
 
 .risk-gauge__labels {
   display: flex;
-  justify-content: space-between;
   margin-top: var(--space-2);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--color-ink-faint);
 }
 
@@ -72,50 +128,21 @@
   font-weight: 600;
 }
 
-.risk-gauge__result {
-  margin-top: var(--space-6);
-  padding: var(--space-5);
-  border-radius: var(--radius-lg);
+/* Fallback --------------------------------------------------------------- */
+
+.risk-gauge--unknown {
   text-align: center;
+  padding: var(--space-5) var(--space-4);
+  background: var(--color-paper-sunken);
+  border-radius: var(--radius-lg);
 }
 
-.risk-gauge__title-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
-}
-
-.risk-gauge__result h2 {
-  margin-bottom: 0;
-}
-
-.risk-gauge__result p {
+.risk-gauge--unknown p {
+  margin-top: var(--space-2);
   color: var(--color-ink-soft);
+  font-size: var(--text-sm);
 }
 
-.risk-gauge__result--no_mild_risk {
-  background: var(--color-risk-mild-soft);
-}
-.risk-gauge__result--no_mild_risk h2 {
-  color: var(--color-risk-mild);
-}
-
-.risk-gauge__result--moderate_risk {
-  background: var(--color-risk-moderate-soft);
-}
-.risk-gauge__result--moderate_risk h2 {
-  color: var(--color-risk-moderate);
-}
-
-.risk-gauge__result--high_risk {
-  background: var(--color-risk-high-soft);
-}
-.risk-gauge__result--high_risk h2 {
-  color: var(--color-risk-high);
-}
-
-.risk-gauge--small .risk-gauge__result {
+.risk-gauge--small .risk-gauge__result p {
   display: none;
 }

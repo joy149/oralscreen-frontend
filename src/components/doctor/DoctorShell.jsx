@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useDoctorSession } from '../../context/DoctorSessionContext';
-import oralscreenLogo from '../../assets/oralscreen_icon.jpg';
+import oralscreenLogo from '../../assets/oralscreen-mark.png';
 import './DoctorShell.css';
 
 export default function DoctorShell({ children }) {
