@@ -47,7 +47,7 @@ export default function PastAssessmentDetail() {
   useEffect(() => { loadAssessment(); }, [loadAssessment]);
 
   if (!patient) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/start" replace />;
   }
 
   const reviewed = Boolean(assessment?.doctorRiskClassification);

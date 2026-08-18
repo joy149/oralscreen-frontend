@@ -68,14 +68,14 @@
   flex-shrink: 0;
   background: var(--color-line);
 }
-.doctor-queue__pill-dot--HIGH_RISK { background: #C1503F; }
-.doctor-queue__pill-dot--MODERATE_RISK { background: #C98A2E; }
-.doctor-queue__pill-dot--NO_MILD_RISK { background: #5C8F6E; }
+.doctor-queue__pill-dot--HIGH_RISK { background: var(--color-risk-high); }
+.doctor-queue__pill-dot--MODERATE_RISK { background: var(--color-risk-moderate); }
+.doctor-queue__pill-dot--NO_MILD_RISK { background: var(--color-risk-mild); }
 
 .doctor-queue__pill-count {
   padding: 0 5px;
   border-radius: 3px;
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--color-paper-sunken);
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
 }
@@ -123,7 +123,7 @@
 
 .doctor-queue__row--header {
   min-height: 38px;
-  background: #f8faf9;
+  background: var(--color-paper-sunken);
   color: var(--color-ink-faint);
 }
 .doctor-queue__row--header > span:first-child { grid-column: 2; } /* skip the edge track */
@@ -172,7 +172,7 @@
   transition: background 0.15s ease;
 }
 .doctor-queue__row--case:last-child { border-bottom: 0; }
-.doctor-queue__row--case:hover { background: #f6faf9; }
+.doctor-queue__row--case:hover { background: var(--color-paper-sunken); }
 .doctor-queue__row--case:hover .doctor-queue__arrow { color: var(--color-primary); }
 
 /* Risk-edge indicator — lets a doctor triage by color down the left rail
@@ -187,9 +187,9 @@
   border-radius: 2px;
   background: var(--color-line);
 }
-.doctor-queue__row--case[data-risk='HIGH_RISK']::before { background: #C1503F; }
-.doctor-queue__row--case[data-risk='MODERATE_RISK']::before { background: #C98A2E; }
-.doctor-queue__row--case[data-risk='NO_MILD_RISK']::before { background: #5C8F6E; }
+.doctor-queue__row--case[data-risk='HIGH_RISK']::before { background: var(--color-risk-high); }
+.doctor-queue__row--case[data-risk='MODERATE_RISK']::before { background: var(--color-risk-moderate); }
+.doctor-queue__row--case[data-risk='NO_MILD_RISK']::before { background: var(--color-risk-mild); }
 
 .doctor-queue__patient { grid-column: 2; }
 .doctor-queue__patient strong,
@@ -223,7 +223,7 @@
   flex-shrink: 0;
 }
 .is-reviewed .status-dot { background: var(--color-success); }
-.is-awaiting .status-dot { background: #C98A2E; }
+.is-awaiting .status-dot { background: var(--color-risk-moderate); }
 
 .doctor-queue__arrow {
   color: var(--color-ink-faint);

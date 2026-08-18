@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { PatientProvider, usePatient } from './context/PatientContext';
+import Landing from './screens/Landing';
 import PhoneEntry from './screens/PhoneEntry';
 import PatientHome from './screens/PatientHome';
 import QuestionnaireForm from './screens/QuestionnaireForm';
@@ -23,18 +24,21 @@ const DoctorCase = lazy(() => import('./screens/doctor/DoctorCase'));
 const AdminDashboard = lazy(() => import('./screens/admin/AdminDashboard'));
 
 /**
- * `/` is the app's only front door, so it answers to whoever knocks: the sign-in form for
- * a stranger, the home screen for a patient who is already signed in.
+ * `/` answers to whoever knocks: the public landing page for a stranger, the home screen
+ * for a patient who is already signed in.
  *
- * <p>A separate `/home` route was the alternative and is worse — it leaves `/` free to
- * show the OTP form to an authenticated patient whenever anything lands there, which is
- * the bug this replaces. Everything that already routes to `/` keeps working unchanged:
- * `useSessionRecovery` clears the patient before navigating (so it lands on sign-in, as
- * intended), and `AccountMenu`'s log out does the same.
+ * <p>`/` used to resolve to the OTP form for a stranger, which meant the product's only
+ * front door was a phone-number field with no explanation of what OralScreen is or who
+ * reviews it. Sign-in now lives at `/start`, and everything that means "go and sign in" —
+ * `useSessionRecovery`, the patient screens' own guards — points there rather than at `/`.
+ *
+ * <p>What still points at `/` is deliberate: `AccountMenu`'s Home item (a signed-in
+ * patient lands on `PatientHome`), its log out (a signed-out visitor lands on the landing
+ * page), and `AppShell`'s brand, which serves both.
  */
 function PatientLanding() {
   const { patient } = usePatient();
-  return patient ? <PatientHome /> : <PhoneEntry />;
+  return patient ? <PatientHome /> : <Landing />;
 }
 
 export default function App() {
@@ -46,6 +50,7 @@ export default function App() {
             <Suspense fallback={<LoadingState message="Loading…" />}>
               <Routes>
                 <Route path="/" element={<PatientLanding />} />
+                <Route path="/start" element={<PhoneEntry />} />
                 <Route path="/questionnaire" element={<QuestionnaireForm />} />
                 <Route path="/questionnaire/:questionnaireId" element={<QuestionnaireForm />} />
                 <Route path="/questionnaire/:questionnaireId/photos" element={<PhotoUpload />} />

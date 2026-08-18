@@ -50,8 +50,8 @@ function RecentSkeleton() {
  * on `/assessments`, where opening it is a choice.
  *
  * <p>No `!patient` redirect guard, unlike the other patient screens: `/` itself chooses
- * between this and `PhoneEntry` on exactly that condition (see App.jsx), so a
- * `<Navigate to="/">` here would be a loop. Logging out re-renders `/` as sign-in.
+ * between this and the public `Landing` page on exactly that condition (see App.jsx), so a
+ * `<Navigate to="/">` here would be a loop. Logging out re-renders `/` as the landing page.
  */
 export default function PatientHome() {
   const navigate = useNavigate();

@@ -82,4 +82,13 @@ describe('DoctorShell', () => {
 
     expect(container.querySelector('.doctor-shell__logo')).toHaveAttribute('alt', '');
   });
+
+  it('gives the reviewer a theme control in the header', () => {
+    setup();
+
+    // The toggle's own behaviour is covered in useClinicianTheme.test.jsx; here it just
+    // has to be present and distinguishable from Sign out.
+    expect(screen.getByRole('button', { name: /switch to (light|dark) theme/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument();
+  });
 });

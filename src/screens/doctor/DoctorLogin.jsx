@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../../api/client';
 import { createDoctorSession, useDoctorSession } from '../../context/DoctorSessionContext';
 import PageTransition from '../../components/shared/PageTransition';
+import ClinicianThemeToggle from '../../components/doctor/ClinicianThemeToggle';
+import useClinicianTheme from '../../components/doctor/useClinicianTheme';
 import OtpInput from '../../components/shared/OtpInput';
 import oralscreenLogo from '../../assets/oralscreen-mark.png';
 import {
@@ -18,6 +20,7 @@ export default function DoctorLogin() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setSession } = useDoctorSession();
+  const { theme, toggleTheme } = useClinicianTheme();
   // Flow: phone → otp → (auto-check) → register | pending   (or auto-login if approved)
   const [step, setStep] = useState('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -236,6 +239,10 @@ export default function DoctorLogin() {
         <header className="doctor-login__brand">
           <img src={oralscreenLogo} alt="" className="doctor-login__logo" />
           OralScreen <span>Clinical</span>
+          <button type="button" className="doctor-login__exit" onClick={() => navigate('/')}>
+            Patient site
+          </button>
+          <ClinicianThemeToggle theme={theme} onToggle={toggleTheme} />
         </header>
         <main className="doctor-login__main">
           <div className="doctor-login__intro">

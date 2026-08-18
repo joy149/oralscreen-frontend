@@ -32,7 +32,7 @@ function renderList() {
     <MemoryRouter initialEntries={['/assessments']} future={routerFuture}>
       <Routes>
         <Route path="/assessments" element={<PastAssessments />} />
-        <Route path="/" element={<p>Sign in screen</p>} />
+        <Route path="/start" element={<p>Sign in screen</p>} />
       </Routes>
     </MemoryRouter>
   );
@@ -68,7 +68,7 @@ describe('access', () => {
 
   // History-back was actively wrong here: arriving from a result detail — which itself
   // backs out to this list — made "back" return to the screen just left.
-  it('sends the back control to the landing screen', async () => {
+  it('sends the back control to `/`, which a signed-in patient reads as home', async () => {
     apiMock.getPatientAssessments.mockResolvedValue([]);
     const { user } = renderList();
 

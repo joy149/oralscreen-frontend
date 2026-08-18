@@ -91,7 +91,7 @@ export default function QuestionnaireForm() {
   }, [questionnaireId, loadRetry]);
 
   if (!patient && !questionnaireId) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/start" replace />;
   }
 
   function answer(key, value) {
@@ -185,6 +185,7 @@ export default function QuestionnaireForm() {
             </div>
 
             <section className="questionnaire-form__group" aria-labelledby="symptoms-heading">
+              <p className="section-label questionnaire-form__group-label" aria-hidden="true">Symptoms</p>
               <h2 className="questionnaire-form__group-title" id="symptoms-heading">
                 Are you experiencing any of these?
               </h2>
@@ -203,6 +204,7 @@ export default function QuestionnaireForm() {
             </section>
 
             <section className="questionnaire-form__group" aria-labelledby="habits-heading">
+              <p className="section-label questionnaire-form__group-label" aria-hidden="true">Habits</p>
               <h2 className="questionnaire-form__group-title" id="habits-heading">
                 Do any of these apply to you?
               </h2>

@@ -148,9 +148,11 @@ a {
   transform: scale(0.97);
 }
 
+/* The label colour is a token because --color-primary is remapped in the clinician
+   dark theme, where it lifts to a light teal that white text cannot sit on. */
 .btn-primary {
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-on-primary, #ffffff);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -297,6 +299,45 @@ a {
 
 .switch input:checked ~ .thumb {
   transform: translateX(20px);
+}
+
+/* Chart-note label -------------------------------------------------------
+   The landing page opens every section with one of these, so the product screens use
+   the same device: a patient who arrives from the marketing page meets one system, not
+   two. It is also the right register for the thing it usually labels here — a group of
+   clinical fields, a fact in a record — which is why it reads as annotation rather than
+   as a heading competing with the screen's own. */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.section-label::before {
+  content: '';
+  width: 18px;
+  height: 1px;
+  background: var(--color-line-strong);
+  flex: none;
+}
+
+/* Without the rule, for labels sitting inside a card or a definition list where the
+   extra mark would be noise. */
+.section-label--bare { gap: 0; }
+.section-label--bare::before { display: none; }
+
+/* Anything a patient compares across screenings — dates, counts, case ids. Tabular
+   figures so a column of them lines up instead of shimmering. */
+.data-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 .error-text {

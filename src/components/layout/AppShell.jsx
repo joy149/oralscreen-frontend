@@ -34,6 +34,10 @@ const STEP_LABELS = ['Symptoms', 'Photos', 'Result'];
  * `back` accepts `true` (history back), a path string, or a callback.
  * When set, the bar swaps the brand for a back control and renders `title`
  * as the screen's <h1> — so the screen body should not repeat it.
+ *
+ * `wide` lifts the 480px cap on the bar and footer. The cap exists so a clinical form
+ * stays thumb-reachable; the sign-in screen sits directly behind the landing page and
+ * would read as a different product squeezed into a narrow column beside it.
  */
 export default function AppShell({
   children,
@@ -42,6 +46,7 @@ export default function AppShell({
   back,
   title,
   clinicianLink = false,
+  wide = false,
 }) {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const { patient } = usePatient();
@@ -68,7 +73,7 @@ export default function AppShell({
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${wide ? ' app-shell--wide' : ''}`}>
       <a className="skip-link" href="#main">Skip to content</a>
       <header className="app-shell__header">
         <div className="app-shell__bar">
@@ -83,8 +88,10 @@ export default function AppShell({
             </button>
           ) : (
             /* Both destinations are `/`: PatientLanding resolves it to the home screen for
-               a signed-in patient and to phone/OTP entry for everyone else, so the brand
-               does not need to know which one it is sending people to.
+               a signed-in patient and to the public landing page for everyone else, so the
+               brand does not need to know which one it is sending people to. Note it is
+               deliberately not `/start` — someone who has not signed in and taps the brand
+               wants the front door, not the OTP form.
 
                Note this is live during the questionnaire flow, where the shell renders the
                brand rather than a back control and neither the in-progress answers nor

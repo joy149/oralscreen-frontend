@@ -58,7 +58,7 @@ export default function PastAssessments() {
   // inline updates the router while this component is still rendering, which React warns
   // about and which double-invokes under StrictMode.
   if (!patient) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/start" replace />;
   }
 
   // Explicit `back` path for the same reason as PatientProfile — and here history-back was

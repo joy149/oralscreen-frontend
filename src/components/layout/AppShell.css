@@ -185,3 +185,22 @@
 .app-shell__offline-banner svg {
   flex-shrink: 0;
 }
+
+/* Wide variant — used by the sign-in screen, which sits directly behind the landing
+   page and needs its proportions rather than the 480px clinical column. */
+.app-shell--wide .app-shell__header,
+.app-shell--wide .app-shell__footer {
+  max-width: 1040px;
+}
+
+.app-shell--wide .app-shell__bar {
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+}
+
+@media (max-width: 560px) {
+  .app-shell--wide .app-shell__bar {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+}

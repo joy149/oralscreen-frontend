@@ -1,19 +1,43 @@
+/* Clinicians get the deep band, patients get warm paper: one system, two registers.
+   Colours come from the remapped tokens in clinician-theme.css rather than the fixed
+   --color-deep set, so this screen follows the reviewer's light/dark choice instead of
+   being permanently dark. */
 .doctor-login {
+  position: relative;
   min-height: 100dvh;
-  background: #f5f7f6;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  overflow: hidden;
+}
+
+/* Same ambient treatment as the landing's deep sections, so the two surfaces are
+   recognisably the same material. */
+.doctor-login::before {
+  content: '';
+  position: absolute;
+  top: -280px;
+  right: -220px;
+  width: 720px;
+  height: 720px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(42, 157, 143, 0.16) 0%, transparent 66%);
 }
 
 .doctor-login__brand {
-  height: 64px;
+  position: relative;
+  z-index: 1;
+  height: 72px;
   padding: 0 var(--space-6);
   display: flex;
   align-items: center;
   gap: var(--space-2);
   border-bottom: 1px solid var(--color-line);
-  background: var(--color-paper-raised);
-  color: var(--color-primary-dark);
+  background: transparent;
+  color: var(--color-ink);
   font-family: var(--font-display);
   font-weight: 700;
+  font-size: var(--text-lg);
 }
 
 .doctor-login__logo {
@@ -27,38 +51,70 @@
 .doctor-login__brand span {
   margin-left: var(--space-2);
   color: var(--color-ink-faint);
-  font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .doctor-login__main {
-  width: min(430px, calc(100% - 32px));
+  position: relative;
+  z-index: 1;
+  width: min(440px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 10vh 0 var(--space-7);
+  padding: 8vh 0 var(--space-7);
 }
 
 .doctor-login__intro { margin-bottom: var(--space-6); }
+
+/* The chart-note label the landing page uses for its section eyebrows. */
 .doctor-login__intro > p {
-  margin-bottom: var(--space-2);
-  color: var(--color-primary);
-  font-size: 0.78rem;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  color: var(--color-ink-faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
 }
-.doctor-login__intro h1 { font-size: 1.8rem; }
-.doctor-login__intro > span {
-  display: block;
-  margin-top: var(--space-3);
-  color: var(--color-ink-soft);
+
+.doctor-login__intro > p::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: var(--color-line-strong);
+  flex: none;
 }
 
+.doctor-login__intro h1 {
+  color: var(--color-ink);
+  font-size: clamp(28px, 4vw, 38px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.doctor-login__intro > span {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--color-ink-soft);
+  font-size: var(--text-base);
+}
+
+/* The panel belongs to the surface now rather than floating on it as a lit card. That
+   reverses an earlier call — the form controls were left light because global.css builds
+   them for a light ground, so the inputs and the OTP boxes are corrected inside the
+   clinician scope in clinician-theme.css instead. */
 .doctor-login__panel {
   padding: var(--space-6);
   border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--color-paper-raised);
-  box-shadow: var(--shadow-card);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-hero);
 }
 
 .doctor-login__panel .field:last-of-type { margin-bottom: var(--space-5); }
@@ -67,7 +123,7 @@
   padding: var(--space-3);
   border-left: 3px solid var(--color-error);
   background: var(--color-error-soft);
-  color: #7e302a;
+  color: var(--color-error-ink);
   font-size: 0.875rem;
 }
 
@@ -121,8 +177,23 @@
   color: var(--color-ink-soft);
 }
 
+/* A way back to the public site, which this screen previously had no exit to. */
+.doctor-login__exit {
+  margin-left: auto;
+  background: none;
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+
+.doctor-login__exit:hover { color: var(--color-primary); }
+
 @media (max-width: 520px) {
-  .doctor-login__brand { height: 56px; padding: 0 var(--space-4); }
-  .doctor-login__main { padding-top: var(--space-7); }
+  .doctor-login__brand { height: 60px; padding: 0 var(--space-4); }
+  .doctor-login__main { padding-top: var(--space-6); }
   .doctor-login__panel { padding: var(--space-5); }
 }

@@ -22,6 +22,7 @@
 
   /* Brand */
   --color-primary: #1f6f6b;
+  --color-on-primary: #ffffff;
   --color-primary-dark: #16514e;
   --color-primary-soft: #e4f0ee;
 
@@ -100,6 +101,30 @@
   /* Gradient accents */
   --gradient-primary: linear-gradient(135deg, #1f6f6b 0%, #2a9d8f 100%);
   --gradient-subtle: linear-gradient(135deg, rgba(31, 111, 107, 0.04) 0%, rgba(42, 157, 143, 0.07) 100%);
+
+  /* Marketing surfaces — the landing page inverts into a deep band, which the
+     product screens never do. Contrast against --color-deep is verified:
+     on-deep 12.6:1 (AAA) · on-deep-soft 7.7:1 (AAA) · on-deep-faint 4.9:1 (AA) */
+  --color-deep: #0c2a29;
+  --color-deep-line: rgba(240, 234, 221, 0.14);
+  --color-deep-raise: rgba(240, 234, 221, 0.05);
+  --color-on-deep: #f0eadd;
+  --color-on-deep-soft: #a6beba;
+  --color-on-deep-faint: #7c9995;
+
+  /* Capture viewfinder. Deliberately NOT a photographic tissue colour: the
+     landing illustrates the arch as an odontogram, because an intraoral photo
+     on a marketing page repels the anxious visitor the product exists for. */
+  --color-viewfinder-near: #1b2c2a;
+  --color-viewfinder-far: #0a1414;
+  --color-viewfinder-line: rgba(240, 234, 221, 0.30);
+  --color-viewfinder-fill: rgba(240, 234, 221, 0.07);
+
+  /* Chart-note labels on the landing page. No webfont: this is the one role
+     where a system mono is indistinguishable from a loaded one. */
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, 'Roboto Mono', monospace;
+
+  --shadow-hero: 0 4px 12px rgba(23, 38, 42, 0.09), 0 40px 90px rgba(23, 38, 42, 0.14);
 
   --touch-target-min: 44px;
   --max-width: 480px;

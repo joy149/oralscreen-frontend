@@ -41,7 +41,7 @@ export default function PatientProfile() {
   }, []);
 
   if (!patient) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/start" replace />;
   }
 
   async function handleSubmit(e) {

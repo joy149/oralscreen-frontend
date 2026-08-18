@@ -1,0 +1,152 @@
+/* Clinician theme
+   ---------------------------------------------------------------------------
+   The clinician side has its own light/dark switch; the patient side does not.
+   That asymmetry is deliberate — a patient passes through once, a reviewer sits
+   with these screens for a shift and should get to choose the surface.
+
+   This works by remapping the existing --color-* tokens inside the clinician
+   roots rather than introducing a parallel --clin-* set. Every clinician screen
+   is already token-driven, so one scoped block themes the shell, the queue, the
+   case view, the login form, the OTP boxes and every shared component inside
+   them. Rewriting each rule to a second token family would have been the same
+   result for far more churn, and would have left new rules free to drift.
+
+   The attribute lives on <html> because it is simplest to set from anywhere,
+   but the token overrides are scoped to .doctor-shell / .doctor-login so they
+   can never reach a patient screen even while the attribute is present. */
+
+[data-clinician-theme='dark'] .doctor-shell,
+[data-clinician-theme='dark'] .doctor-login {
+  /* Surfaces — the landing page's deep band, which is where the clinician
+     identity was established. */
+  --color-paper: #0c2a29;
+  --color-paper-raised: #123a38;
+  --color-paper-sunken: #0a2422;
+
+  --color-line: rgba(240, 234, 221, 0.14);
+  --color-line-strong: rgba(240, 234, 221, 0.26);
+  --color-line-input: rgba(240, 234, 221, 0.34);
+
+  /* Ink — verified against --color-paper #0c2a29:
+     ink 12.6:1 (AAA) · ink-soft 7.7:1 (AAA) · ink-faint 4.9:1 (AA) */
+  --color-ink: #f0eadd;
+  --color-ink-soft: #a6beba;
+  --color-ink-faint: #7c9995;
+
+  /* The brand teal is too dark to sit on the deep band, so it lifts. That
+     inverts what a filled button needs for its label, hence --color-on-primary. */
+  --color-primary: #4fbfae;
+  --color-primary-dark: #7fd8c8;
+  --color-primary-soft: rgba(79, 191, 174, 0.16);
+  --color-on-primary: #06231f;
+
+  /* Risk stays an ordinal scale; only the surfaces and inks swap so each tier
+     keeps its meaning. Fills are unchanged — they are the scale itself. */
+  --color-risk-mild-soft: #1a3529;
+  --color-risk-mild-ink: #9ed4b0;
+  --color-risk-moderate-soft: #33270e;
+  --color-risk-moderate-ink: #efc57f;
+  --color-risk-high-soft: #351a16;
+  --color-risk-high-ink: #f0a79c;
+
+  --color-error-soft: #351a16;
+  --color-error-ink: #f0a79c;
+  --color-error: #e07a6e;
+  --color-success-soft: #1a3529;
+  --color-success-ink: #9ed4b0;
+  --color-success: #7fb894;
+
+  --color-disabled-bg: rgba(240, 234, 221, 0.08);
+  --color-disabled-ink: #7c9995;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.45), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.5), 0 12px 36px rgba(0, 0, 0, 0.4);
+  --shadow-hero: 0 4px 12px rgba(0, 0, 0, 0.5), 0 40px 90px rgba(0, 0, 0, 0.55);
+
+  color-scheme: dark;
+}
+
+/* Form controls come from global.css and are built for a light surface. Rather
+   than duplicating them, the few properties that assume a light ground are
+   corrected here — inside the clinician scope only. */
+[data-clinician-theme='dark'] .doctor-shell input,
+[data-clinician-theme='dark'] .doctor-shell select,
+[data-clinician-theme='dark'] .doctor-shell textarea,
+[data-clinician-theme='dark'] .doctor-login input,
+[data-clinician-theme='dark'] .doctor-login select,
+[data-clinician-theme='dark'] .doctor-login textarea {
+  background: rgba(240, 234, 221, 0.06);
+  color: var(--color-ink);
+}
+
+[data-clinician-theme='dark'] .doctor-shell ::placeholder,
+[data-clinician-theme='dark'] .doctor-login ::placeholder {
+  color: var(--color-ink-faint);
+  opacity: 1;
+}
+
+/* The OTP boxes are shared with patient sign-in, so they are corrected here
+   instead of in OtpInput.css — that file must keep working on warm paper. */
+[data-clinician-theme='dark'] .doctor-login .otp-box {
+  background: rgba(240, 234, 221, 0.06);
+  border-color: var(--color-line-input);
+  color: var(--color-ink);
+}
+
+[data-clinician-theme='dark'] .doctor-login .otp-box.is-filled {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+/* Native dropdown options render on the OS surface, which ignores the page's
+   tokens on some platforms; pin them so a dark select is not white inside. */
+[data-clinician-theme='dark'] .doctor-shell option,
+[data-clinician-theme='dark'] .doctor-login option {
+  background: #123a38;
+  color: #f0eadd;
+}
+
+/* Theme toggle -------------------------------------------------------------- */
+
+.clinician-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper-raised);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.clinician-theme-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.clinician-theme-toggle svg {
+  display: block;
+}
+
+/* Switching surface mid-shift is jarring if it snaps. Kept short, and dropped
+   entirely for anyone who has asked for less motion. */
+.doctor-shell,
+.doctor-login {
+  transition: background-color var(--duration-normal) var(--ease-smooth),
+    color var(--duration-normal) var(--ease-smooth);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doctor-shell,
+  .doctor-login {
+    transition: none;
+  }
+}

@@ -13,9 +13,20 @@
   margin-bottom: var(--space-6);
 }
 
+/* The chart-note label sits above the question rather than replacing it: the device is
+   for short labels, and setting a full sentence — "Are you experiencing any of these?" —
+   in 11px letterspaced uppercase made the form shout and cost real legibility. The
+   question itself stays a plain, readable heading. `aria-hidden` on the label because
+   the section is already named by the <h2> it precedes; announcing both would just
+   repeat "Symptoms" before the question. */
+.questionnaire-form__group-label {
+  margin-bottom: var(--space-3);
+}
+
 .questionnaire-form__group-title {
   font-size: var(--text-base);
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--color-ink);
   margin-bottom: var(--space-2);
 }

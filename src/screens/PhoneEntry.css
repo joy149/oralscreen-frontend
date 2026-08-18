@@ -1,39 +1,104 @@
-.phone-entry {
+/* Sign-in sits one click behind the landing page, so it borrows that page's
+   proportions and type rather than presenting a 480px form column that reads as a
+   different product. The form itself is unchanged — only its setting is. */
+.screen.phone-entry {
+  position: relative;
   justify-content: center;
   gap: var(--space-6);
+  max-width: 1040px;
+  padding-top: var(--space-7);
+  /* Clips the orb's bleed. `clip` rather than `hidden` so this never becomes a scroll
+     container; the privacy modal is position:fixed and escapes either way, since no
+     ancestor here establishes a containing block for it. */
+  overflow: clip;
 }
 
-.phone-entry__intro {
-  text-align: center;
+.phone-entry__orb {
+  position: absolute;
+  top: -260px;
+  right: -240px;
+  width: 680px;
+  height: 680px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(42, 157, 143, 0.16) 0%, transparent 66%);
+  z-index: 0;
+}
+
+.phone-entry__aside,
+.phone-entry__panel {
+  position: relative;
+  z-index: 1;
+}
+
+.phone-entry__eyebrow {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  margin-bottom: var(--space-4);
 }
 
-.phone-entry__hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 5px 14px;
-  background: var(--color-primary-soft);
-  color: var(--color-primary-dark);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  margin-bottom: var(--space-3);
-  border: 1px solid rgba(31, 111, 107, 0.15);
-  letter-spacing: 0.01em;
+.phone-entry__eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: var(--color-line-strong);
+  flex: none;
 }
 
-.phone-entry__hero-icon {
-  color: var(--color-primary);
+.phone-entry h1 {
+  font-size: clamp(30px, 4.4vw, 44px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 700;
 }
 
-.phone-entry__intro p {
-  margin-top: var(--space-2);
+.phone-entry__lede {
+  margin-top: var(--space-4);
   color: var(--color-ink-soft);
+  font-size: var(--text-lg);
+  max-width: 26em;
+}
+
+.phone-entry__steps {
+  list-style: none;
+  margin: var(--space-6) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.phone-entry__steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.phone-entry__steps strong {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
   font-size: var(--text-base);
-  max-width: 360px;
+  color: var(--color-ink);
+}
+
+.phone-entry__steps span:last-child {
+  font-size: var(--text-sm);
+  color: var(--color-ink-faint);
+}
+
+.phone-entry__step-n {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--color-primary);
+  padding-top: 3px;
+  flex: none;
 }
 
 /* A 3-up grid rather than a wrapping flex row: at 375px the flex version
@@ -41,31 +106,49 @@
 .phone-entry__trust-badges {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2);
+  gap: var(--space-4);
   width: 100%;
-  margin-top: var(--space-5);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-line);
 }
 
 .phone-entry__trust-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-2);
-  text-align: center;
-  border-radius: var(--radius-sm);
-  background: var(--color-paper-raised);
-  border: 1px solid var(--color-line);
+  gap: var(--space-2);
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--color-ink-soft);
-  box-shadow: 0 1px 2px rgba(23, 38, 42, 0.03);
 }
 
 .phone-entry__trust-item svg {
   color: var(--color-primary);
   flex-shrink: 0;
+}
+
+/* Desktop splits into the landing page's asymmetry: the pitch on the left, the form
+   on the right. Below this the form leads and the context follows it. */
+@media (min-width: 900px) {
+  .screen.phone-entry {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: var(--space-8);
+    align-items: center;
+    padding-top: var(--space-8);
+  }
+}
+
+@media (max-width: 899px) {
+  .screen.phone-entry { max-width: var(--max-width); }
+  .phone-entry h1 { font-size: var(--text-2xl); }
+  .phone-entry__steps { display: none; }
+  .phone-entry__trust-badges { gap: var(--space-2); }
+  .phone-entry__trust-item {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-1);
+  }
 }
 
 .phone-entry__new-patient-note {
@@ -178,3 +261,11 @@
   color: var(--color-ink-soft, var(--color-ink));
 }
 
+
+/* The form card matches the landing page's raised surfaces rather than the flatter
+   in-flow cards used deeper in the product. */
+.phone-entry__panel .card {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hero);
+  padding: var(--space-6);
+}

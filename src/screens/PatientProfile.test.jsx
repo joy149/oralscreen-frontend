@@ -31,7 +31,8 @@ function renderProfile() {
       <ToastProvider>
         <Routes>
           <Route path="/profile" element={<PatientProfile />} />
-          <Route path="/" element={<p>Sign in screen</p>} />
+          <Route path="/" element={<p>Home screen</p>} />
+          <Route path="/start" element={<p>Sign in screen</p>} />
         </Routes>
       </ToastProvider>
     </MemoryRouter>
@@ -62,13 +63,17 @@ describe('access', () => {
   // An explicit path rather than history-back: this screen opens from the account menu on
   // any screen, so `navigate(-1)` landed somewhere different each time, and left the app
   // entirely when the patient arrived on a deep link.
-  it('sends the back control to the landing screen', async () => {
+  it('sends the back control home, not to sign-in', async () => {
     apiMock.getSexOptions.mockResolvedValue([]);
     const { user } = renderProfile();
 
     await user.click(screen.getByRole('button', { name: 'Go back' }));
 
-    expect(screen.getByText('Sign in screen')).toBeInTheDocument();
+    // Asserted against a distinct `/` stub: while sign-in also lived at `/`, this
+    // test passed whether back went home or dumped a signed-in patient on the
+    // sign-in form. Those are now separate routes, so it can tell them apart.
+    expect(screen.getByText('Home screen')).toBeInTheDocument();
+    expect(screen.queryByText('Sign in screen')).not.toBeInTheDocument();
   });
 });
 

@@ -3,9 +3,15 @@
 }
 
 .past-assessments__intro p {
-  margin-top: var(--space-2);
-  color: var(--color-ink-faint);
+  margin-top: var(--space-3);
+  color: var(--color-ink-soft);
   font-size: 0.9375rem;
+}
+
+.past-assessments__intro h1,
+.patient-profile__intro h1 {
+  letter-spacing: -0.03em;
+  font-weight: 700;
 }
 
 .past-assessments__list {
@@ -30,6 +36,7 @@
 .past-assessments__row:hover {
   border-color: var(--color-primary);
   box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 
 .past-assessments__row-main {
@@ -40,7 +47,11 @@
 }
 
 .past-assessments__row-main strong {
-  font-size: 0.9375rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 .past-assessments__row-main .is-reviewed,

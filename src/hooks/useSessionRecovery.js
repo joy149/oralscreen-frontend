@@ -13,6 +13,9 @@ import { usePatient } from '../context/PatientContext';
  * Retry button that could not possibly succeed, with nothing anywhere offering to sign in
  * again.
  *
+ * <p>Sends them to `/start` rather than `/`: `/` is the public landing page, and a patient
+ * whose session just expired mid-task needs the sign-in form, not the pitch.
+ *
  * <p>Returns a handler that reports whether it took ownership of the error, so callers read
  * as `if (!handleAuthError(err)) setError(err);` — mirroring `DoctorCase`.
  *
@@ -29,7 +32,7 @@ export default function useSessionRecovery() {
       // Drop the stored patient too: leaving it behind is what let every screen keep
       // rendering as though someone were signed in.
       clearPatient();
-      navigate('/', { replace: true, state: { sessionExpired: true } });
+      navigate('/start', { replace: true, state: { sessionExpired: true } });
       return true;
     }
     return false;
