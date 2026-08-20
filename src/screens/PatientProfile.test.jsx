@@ -31,7 +31,8 @@ function renderProfile() {
       <ToastProvider>
         <Routes>
           <Route path="/profile" element={<PatientProfile />} />
-          <Route path="/" element={<p>Home screen</p>} />
+          <Route path="/home" element={<p>Home screen</p>} />
+          <Route path="/" element={<p>Landing page</p>} />
           <Route path="/start" element={<p>Sign in screen</p>} />
         </Routes>
       </ToastProvider>
@@ -69,10 +70,12 @@ describe('access', () => {
 
     await user.click(screen.getByRole('button', { name: 'Go back' }));
 
-    // Asserted against a distinct `/` stub: while sign-in also lived at `/`, this
-    // test passed whether back went home or dumped a signed-in patient on the
-    // sign-in form. Those are now separate routes, so it can tell them apart.
+    // Three distinct stubs, because there are three plausible wrong answers here: the
+    // sign-in form (where back went while sign-in lived at `/`), the public landing page
+    // (where `back="/"` sends a signed-in patient now that `/` no longer forks), and the
+    // patient's own home, which is the only right one.
     expect(screen.getByText('Home screen')).toBeInTheDocument();
+    expect(screen.queryByText('Landing page')).not.toBeInTheDocument();
     expect(screen.queryByText('Sign in screen')).not.toBeInTheDocument();
   });
 });

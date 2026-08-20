@@ -381,7 +381,7 @@ describe('the OTP stage', () => {
     await waitFor(() => expect(confirm).toHaveBeenCalledWith('123456'));
     expect(apiMock.findOrCreatePatient).toHaveBeenCalledWith({ phoneNumber: '+919876543210' });
     expect(setPatient).toHaveBeenCalledWith({ id: 'p1', name: 'Asha' });
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(navigate).toHaveBeenCalledWith('/home');
   });
 
   it('sends a new patient to the details stage instead of erroring', async () => {

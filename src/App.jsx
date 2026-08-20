@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { PatientProvider, usePatient } from './context/PatientContext';
+import { PatientProvider } from './context/PatientContext';
 import Landing from './screens/Landing';
 import PhoneEntry from './screens/PhoneEntry';
 import PatientHome from './screens/PatientHome';
@@ -23,24 +23,6 @@ const DoctorQueue = lazy(() => import('./screens/doctor/DoctorQueue'));
 const DoctorCase = lazy(() => import('./screens/doctor/DoctorCase'));
 const AdminDashboard = lazy(() => import('./screens/admin/AdminDashboard'));
 
-/**
- * `/` answers to whoever knocks: the public landing page for a stranger, the home screen
- * for a patient who is already signed in.
- *
- * <p>`/` used to resolve to the OTP form for a stranger, which meant the product's only
- * front door was a phone-number field with no explanation of what OralScreen is or who
- * reviews it. Sign-in now lives at `/start`, and everything that means "go and sign in" —
- * `useSessionRecovery`, the patient screens' own guards — points there rather than at `/`.
- *
- * <p>What still points at `/` is deliberate: `AccountMenu`'s Home item (a signed-in
- * patient lands on `PatientHome`), its log out (a signed-out visitor lands on the landing
- * page), and `AppShell`'s brand, which serves both.
- */
-function PatientLanding() {
-  const { patient } = usePatient();
-  return patient ? <PatientHome /> : <Landing />;
-}
-
 export default function App() {
   return (
     <PatientProvider>
@@ -49,7 +31,15 @@ export default function App() {
           <BrowserRouter>
             <Suspense fallback={<LoadingState message="Loading…" />}>
               <Routes>
-                <Route path="/" element={<PatientLanding />} />
+                {/* `/` is the public landing page unconditionally, including for a patient
+                    with a live session — it is the product's front door, and a front door
+                    that shows a different product to half its visitors is two front doors.
+                    It used to fork to `PatientHome` on `usePatient()`, which meant one URL
+                    answered as two screens and `PatientHome` could not carry the same
+                    `!patient` guard as every other patient screen. `Landing` reads the
+                    session itself now, and swaps its calls to action rather than the page. */}
+                <Route path="/" element={<Landing />} />
+                <Route path="/home" element={<PatientHome />} />
                 <Route path="/start" element={<PhoneEntry />} />
                 <Route path="/questionnaire" element={<QuestionnaireForm />} />
                 <Route path="/questionnaire/:questionnaireId" element={<QuestionnaireForm />} />

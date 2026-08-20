@@ -1,28 +1,12 @@
-/* Sign-in sits one click behind the landing page, so it borrows that page's
-   proportions and type rather than presenting a 480px form column that reads as a
-   different product. The form itself is unchanged — only its setting is. */
+/* Sign-in sits one click behind the landing page, so it borrows that page's proportions
+   and type rather than presenting a narrow form column that reads as a different product.
+   The form itself is unchanged — only its setting is. The width comes from the shell's
+   `read` tier now; this used to hardcode 1040px of its own. */
 .screen.phone-entry {
   position: relative;
   justify-content: center;
   gap: var(--space-6);
-  max-width: 1040px;
   padding-top: var(--space-7);
-  /* Clips the orb's bleed. `clip` rather than `hidden` so this never becomes a scroll
-     container; the privacy modal is position:fixed and escapes either way, since no
-     ancestor here establishes a containing block for it. */
-  overflow: clip;
-}
-
-.phone-entry__orb {
-  position: absolute;
-  top: -260px;
-  right: -240px;
-  width: 680px;
-  height: 680px;
-  border-radius: 50%;
-  pointer-events: none;
-  background: radial-gradient(circle, rgba(42, 157, 143, 0.16) 0%, transparent 66%);
-  z-index: 0;
 }
 
 .phone-entry__aside,
@@ -140,7 +124,7 @@
 }
 
 @media (max-width: 899px) {
-  .screen.phone-entry { max-width: var(--max-width); }
+  .screen.phone-entry { max-width: var(--wrap-task); }
   .phone-entry h1 { font-size: var(--text-2xl); }
   .phone-entry__steps { display: none; }
   .phone-entry__trust-badges { gap: var(--space-2); }

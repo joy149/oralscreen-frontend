@@ -7,6 +7,7 @@ import { QueueSkeleton } from '../../components/shared/Skeleton';
 import { useToast } from '../../components/shared/Toast';
 import { RefreshCw, CheckCircle2, UserCheck, TrendingUp, ShieldAlert, Clock, Lock, LogOut } from 'lucide-react';
 import { readAdminKey, saveAdminKey, clearAdminKey } from '../../config/adminKey';
+import CostPanel from './CostPanel';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -227,6 +228,17 @@ export default function AdminDashboard() {
     setDoctors([]);
     setUnlockError('');
   };
+
+  // The cost panel loads independently, so it can be the first call to learn the key has
+  // been revoked. Lock the whole console when it does, rather than leaving the doctor
+  // queue on screen implying the key still works. Memoised: it is a dependency of the
+  // panel's load effect, and a fresh identity each render would re-fetch in a loop.
+  const handleKeyRejected = useCallback((message) => {
+    clearAdminKey();
+    setAdminKey('');
+    setDoctors([]);
+    setUnlockError(message || 'That key was rejected.');
+  }, []);
 
   const handleApprove = async (doctor) => {
     if (!doctor.id || approvingIds.has(doctor.id)) return;
@@ -490,6 +502,8 @@ export default function AdminDashboard() {
               })}
             </div>
           )}
+
+          <CostPanel adminKey={adminKey} onKeyRejected={handleKeyRejected} />
         </PageTransition>
       </main>
     </div>

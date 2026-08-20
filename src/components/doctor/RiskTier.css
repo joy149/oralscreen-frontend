@@ -9,7 +9,7 @@
   background: var(--color-paper-raised);
   color: var(--color-ink-soft);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   white-space: nowrap;
 }
 

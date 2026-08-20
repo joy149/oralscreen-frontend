@@ -56,6 +56,14 @@
   --font-display: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
+  /* Weight is a token, not a literal, because the clinician dark theme steps the
+     whole scale down one notch. Light text on a dark ground optically thickens,
+     so 700 reads black and 500 reads semi-bold once inverted. Only the clinician
+     scope remaps these; everywhere else they stay at the light-mode values. */
+  --weight-heading: 700;
+  --weight-label: 600;
+  --weight-body: 500;
+
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -127,5 +135,21 @@
   --shadow-hero: 0 4px 12px rgba(23, 38, 42, 0.09), 0 40px 90px rgba(23, 38, 42, 0.14);
 
   --touch-target-min: 44px;
-  --max-width: 480px;
+
+  /* Layout widths. Two tiers rather than one cap, because the patient side has two kinds
+     of screen and they do not want the same measure.
+
+     --wrap-page is the frame: header, footer, banners, and the overview screens whose
+     content aligns to them. It matches the landing page's wrap so the product does not
+     change width when a visitor signs in.
+
+     --wrap-task is the measure a clinical form is filled in at. It is the only one of the
+     two that is about the thumb rather than the window, which is why it does not scale up
+     on a desktop — a questionnaire set 1140px wide is worse to answer, not better.
+
+     A single --max-width: 480px used to serve both, and it also capped the header and the
+     footer. That is what made the app read as a phone screenshot parked in a desktop
+     window: not the narrow column, but the chrome ending at the column's edge. */
+  --wrap-page: 1140px;
+  --wrap-task: 560px;
 }

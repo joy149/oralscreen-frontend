@@ -4,7 +4,7 @@
   background: transparent;
   color: var(--color-primary-dark);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--weight-label);
 }
 
 .doctor-case { display: grid; gap: var(--space-5); }
@@ -18,7 +18,7 @@
 .doctor-case__heading p {
   color: var(--color-primary);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   text-transform: uppercase;
 }
 .doctor-case__heading h1 { margin-top: var(--space-1); font-size: 1.7rem; }
@@ -61,7 +61,7 @@
 .doctor-case__panel-heading h2 {
   font-family: var(--font-body);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
 }
 .doctor-case__panel-heading p {
   margin-top: 2px;
@@ -79,7 +79,7 @@
   margin-bottom: var(--space-3);
   font-family: var(--font-body);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   text-transform: uppercase;
 }
 .doctor-case__narrative p,
@@ -102,14 +102,14 @@
 .doctor-case__clinical-facts dt {
   color: var(--color-ink-faint);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   text-transform: uppercase;
 }
 .doctor-case__facts dd {
   margin: var(--space-2) 0 0;
   color: var(--color-ink);
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: var(--weight-label);
 }
 
 .doctor-case__clinical-grid {
@@ -130,10 +130,13 @@
   border-right: 1px solid var(--color-line);
   border-bottom: 1px solid var(--color-line);
 }
+/* Spelled out rather than left to inherit — see the note in clinician-theme.css
+   about `body { color }` resolving against the light palette. */
 .doctor-case__clinical-facts dd {
   margin: var(--space-1) 0 0;
+  color: var(--color-ink);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--weight-label);
 }
 .doctor-case__notes { margin-top: var(--space-5); }
 
@@ -185,7 +188,7 @@
 .doctor-case__reasoning-title span {
   color: var(--color-primary-dark);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
 }
 
 .doctor-case__clinical-reasoning {
@@ -199,7 +202,7 @@
   padding: 0;
   color: var(--color-primary-dark);
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   cursor: pointer;
 }
 .doctor-case__clinical-reasoning-text {
@@ -212,7 +215,6 @@
 
 .doctor-case__panel--review { border-color: var(--color-primary); }
 .doctor-case__form { max-width: 720px; padding: var(--space-5); }
-.doctor-case__form textarea { min-height: 130px; }
 .doctor-case__actions {
   display: flex;
   gap: var(--space-3);
@@ -263,7 +265,7 @@
 
 .doctor-case__lightbox-title {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--weight-label);
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -283,7 +285,7 @@
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: var(--weight-body);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -300,7 +302,7 @@
 
 .doctor-case__zoom-label {
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: var(--weight-label);
   min-width: 48px;
   text-align: center;
   color: rgba(255, 255, 255, 0.8);

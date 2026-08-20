@@ -20,6 +20,47 @@
   margin-bottom: var(--space-4);
 }
 
+/* Two columns once the frame is wide enough, with the doctor's notes spanning both. The
+   notes are what the patient opened this screen for, so they get a full-width row rather
+   than whichever cell the flow happened to put them in — and the section above them can be
+   one card or two depending on whether home-care advice came back. */
+.past-assessment-detail__grid {
+  display: contents;
+}
+
+@media (min-width: 900px) {
+  .past-assessment-detail__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    align-items: start;
+  }
+
+  .past-assessment-detail__grid .past-assessment-detail__section { margin-bottom: 0; }
+
+  .past-assessment-detail__section--notes { grid-column: 1 / -1; }
+
+  /* The notes card spans the full frame, so its facts read as a record line rather than a
+     stack with a column of empty space beside it. The rule under each one becomes a column
+     divider instead. */
+  .past-assessment-detail__section--notes .past-assessment-detail__facts {
+    flex-direction: row;
+    gap: var(--space-7);
+  }
+
+  .past-assessment-detail__section--notes .past-assessment-detail__facts > div {
+    padding-bottom: 0;
+    padding-right: var(--space-7);
+    border-bottom: none;
+    border-right: 1px solid var(--color-line);
+  }
+
+  .past-assessment-detail__section--notes .past-assessment-detail__facts > div:last-child {
+    padding-right: 0;
+    border-right: none;
+  }
+}
+
 .past-assessment-detail__section h2 {
   margin-bottom: var(--space-3);
 }

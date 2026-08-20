@@ -50,9 +50,8 @@ function renderAt(path) {
 
 describe('the patient routes', () => {
   it.each([
-    // `/` is the public landing page for a signed-out visitor; PatientContext starts
-    // empty in these tests, so that is the branch PatientLanding takes here.
     ['/', 'Landing'],
+    ['/home', 'PatientHome'],
     ['/start', 'PhoneEntry'],
     ['/questionnaire', 'QuestionnaireForm'],
     ['/questionnaire/q1', 'QuestionnaireForm'],
@@ -75,18 +74,32 @@ describe('the patient routes', () => {
   });
 
   /**
-   * The other half of PatientLanding, and the one that would be embarrassing to get
-   * wrong: a patient who is already signed in must land on their own screenings, not be
-   * re-pitched the product. PatientProvider hydrates from localStorage on first render,
-   * so seeding the key before rendering is enough to take the signed-in branch.
+   * The regression this pair exists to catch. `/` used to fork on the session and render
+   * `PatientHome` for a signed-in patient, so one URL answered as two screens. It is the
+   * landing page for everyone now — including a patient with a live session, who reaches
+   * it from the brand, a bookmark or a shared link. `PatientProvider` hydrates from
+   * localStorage on first render, so seeding the key before rendering is enough to put a
+   * live session in place.
    */
-  it('gives a signed-in patient their home screen at `/`, not the marketing page', async () => {
+  it('keeps `/` on the landing page even when a patient is signed in', async () => {
     localStorage.setItem(
       'oralscreen_patient',
       JSON.stringify({ id: 'p1', name: 'Asha', phoneNumber: '+919876543210' })
     );
 
     renderAt('/');
+
+    expect(await screen.findByText('Landing')).toBeInTheDocument();
+    expect(screen.queryByText('PatientHome')).not.toBeInTheDocument();
+  });
+
+  it('gives a signed-in patient their home screen at `/home`', async () => {
+    localStorage.setItem(
+      'oralscreen_patient',
+      JSON.stringify({ id: 'p1', name: 'Asha', phoneNumber: '+919876543210' })
+    );
+
+    renderAt('/home');
 
     expect(await screen.findByText('PatientHome')).toBeInTheDocument();
     expect(screen.queryByText('Landing')).not.toBeInTheDocument();

@@ -1,28 +1,48 @@
+/* Two custom properties drive every width and gutter below, so the chrome and the content
+   line up by construction rather than by two rules happening to agree.
+
+   --shell-wrap is the CONTENT tier and is the only thing the `width` prop changes. The
+   chrome deliberately does not read it: header, footer and banner are always --wrap-page,
+   so the bar spans the window whether the screen under it is a form or an overview. */
 .app-shell {
+  --shell-wrap: var(--wrap-task);
+  --shell-gutter: var(--space-6);
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+.app-shell--read { --shell-wrap: var(--wrap-page); }
+
+@media (max-width: 560px) {
+  .app-shell { --shell-gutter: var(--space-4); }
 }
 
 .app-shell__header {
   position: sticky;
   top: 0;
   z-index: var(--z-header);
-  max-width: var(--max-width);
-  margin: 0 auto;
   width: 100%;
   padding-top: env(safe-area-inset-top);
   background: var(--color-paper);
   border-bottom: 1px solid var(--color-line);
 }
 
+/* The border above spans the window; the bar's contents stay on the page wrap so the
+   brand sits over the content rather than beside it. */
 .app-shell__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
+  max-width: var(--wrap-page);
+  margin: 0 auto;
+  padding: var(--space-3) var(--shell-gutter);
   min-height: 56px;
+}
+
+@media (min-width: 900px) {
+  .app-shell__bar { min-height: 64px; }
 }
 
 /* A <button> since it became a home control — hence the resets. Left visually identical
@@ -90,6 +110,18 @@
   white-space: nowrap;
 }
 
+/* Centring the title between the two flanking controls is right on a phone and wrong once
+   the bar is 1140px wide — it strands the title in the middle of an empty bar, and leaves
+   the section links no room. On a desktop it sits next to the back control instead. */
+@media (min-width: 900px) {
+  .app-shell__bar-title {
+    flex: none;
+    text-align: left;
+    margin-left: var(--space-2);
+    font-size: var(--text-lg);
+  }
+}
+
 .app-shell__bar-spacer {
   width: var(--touch-target-min);
   flex-shrink: 0;
@@ -98,7 +130,10 @@
 /* Step progress -------------------------------------------------------- */
 
 .app-shell__steps {
-  padding: 0 var(--space-4) var(--space-3);
+  max-width: var(--wrap-page);
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 var(--shell-gutter) var(--space-3);
 }
 
 .app-shell__steps-track {
@@ -136,12 +171,41 @@
   flex-direction: column;
 }
 
+/* A form column on the task tier is ~560px of a 1440px window. On the page's own paper it
+   reads as a strip of content with nothing around it — the phone-app look this rework is
+   about. Sinking the ground behind it turns the same column into a document on a surface,
+   without touching the column's measure. Only on the task tier, and only where there is
+   enough window for the two grounds to be telling each other apart. */
+@media (min-width: 900px) {
+  .app-shell--task .app-shell__main {
+    background: var(--color-paper-sunken);
+    border-top: 1px solid var(--color-line);
+  }
+
+  /* The landing page's ambient orbs, as a background on the one element wide enough to
+     carry them. They were tried as absolutely-positioned children inside the screen and
+     that does not work: a 1140px content column clips them, and a radial gradient cut at
+     its own edge draws a hard straight line — which read as a faint rectangle sitting in
+     the lower half of the page. `.app-shell__main` spans the window, so the only thing
+     clipping these is the viewport.
+
+     Positioned from the centre rather than the edges so they track the content wrap
+     instead of drifting apart from it as the window widens. */
+  .app-shell--read .app-shell__main {
+    background-image:
+      radial-gradient(760px 620px at calc(50% + 430px) -140px, rgba(42, 157, 143, 0.15), transparent 62%),
+      radial-gradient(620px 520px at calc(50% - 470px) 112%, rgba(201, 138, 44, 0.08), transparent 64%);
+    background-repeat: no-repeat;
+  }
+}
+
 .app-shell__footer {
-  max-width: var(--max-width);
+  max-width: var(--wrap-page);
   margin: 0 auto;
   width: 100%;
-  padding: var(--space-4);
-  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  padding: var(--space-5) var(--shell-gutter);
+  padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-line);
   text-align: center;
   font-size: var(--text-xs);
   color: var(--color-ink-faint);
@@ -167,9 +231,9 @@
 }
 
 .app-shell__offline-banner {
-  max-width: var(--max-width);
+  max-width: calc(var(--wrap-page) - var(--shell-gutter) * 2);
   margin: var(--space-3) auto 0;
-  width: calc(100% - var(--space-8));
+  width: calc(100% - var(--shell-gutter) * 2);
   padding: var(--space-3) var(--space-4);
   background: var(--color-risk-moderate-soft);
   border: 1px solid var(--color-risk-moderate);
@@ -186,21 +250,44 @@
   flex-shrink: 0;
 }
 
-/* Wide variant — used by the sign-in screen, which sits directly behind the landing
-   page and needs its proportions rather than the 480px clinical column. */
-.app-shell--wide .app-shell__header,
-.app-shell--wide .app-shell__footer {
-  max-width: 1040px;
+/* Section links ------------------------------------------------------------
+   Desktop only. These destinations already live in the account menu, which is the whole
+   navigation on a phone — so below 900px this disappears rather than turning into a
+   second, competing menu. */
+
+.app-shell__links {
+  display: none;
+  align-items: center;
+  gap: var(--space-1);
+  margin-right: auto;
+  margin-left: var(--space-6);
 }
 
-.app-shell--wide .app-shell__bar {
-  padding-left: var(--space-6);
-  padding-right: var(--space-6);
+@media (min-width: 900px) {
+  .app-shell__links { display: flex; }
 }
 
-@media (max-width: 560px) {
-  .app-shell--wide .app-shell__bar {
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
-  }
+.app-shell__link {
+  border: none;
+  background: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-body);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.app-shell__link:hover {
+  color: var(--color-ink);
+  background: var(--color-primary-soft);
+}
+
+/* The current section is marked by weight and ink rather than an underline, so it reads
+   as state rather than as a fourth control. */
+.app-shell__link[aria-current='page'] {
+  color: var(--color-ink);
+  font-weight: var(--weight-label);
 }

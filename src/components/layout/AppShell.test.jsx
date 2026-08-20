@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -42,6 +42,98 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/**
+ * The section links, and the two conditions that hide them.
+ *
+ * <p>They exist because these destinations used to live only behind the avatar dropdown,
+ * which is the whole navigation on a phone but reads as a hidden menu on a desktop. They
+ * are CSS-hidden below 900px rather than unmounted — jsdom has no layout engine, so these
+ * assert what is in the DOM, and the breakpoint itself is not testable here.
+ */
+describe('section links', () => {
+  it('offers the sections to a signed-in patient', () => {
+    patient = { id: 'p1' };
+    setup();
+
+    const nav = screen.getByRole('navigation', { name: 'Sections' });
+    expect(within(nav).getByRole('button', { name: 'Home' })).toBeInTheDocument();
+    expect(within(nav).getByRole('button', { name: 'Screenings' })).toBeInTheDocument();
+    expect(within(nav).getByRole('button', { name: 'Profile' })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['Home', '/home'],
+    ['Screenings', '/assessments'],
+    ['Profile', '/profile'],
+  ])('sends %s to %s', async (label, path) => {
+    patient = { id: 'p1' };
+    const { user } = setup();
+
+    await user.click(screen.getByRole('button', { name: label }));
+
+    expect(navigate).toHaveBeenCalledWith(path);
+  });
+
+  it('marks the section being viewed as the current page', () => {
+    patient = { id: 'p1' };
+    setup();
+
+    // MemoryRouter starts at '/', so nothing is current — the assertion that matters is
+    // that exactly one link can be, not which one it is here.
+    const current = screen
+      .getAllByRole('button')
+      .filter((el) => el.getAttribute('aria-current') === 'page');
+    expect(current.length).toBeLessThanOrEqual(1);
+  });
+
+  it('offers none of them to a visitor who is not signed in', () => {
+    setup();
+
+    expect(screen.queryByRole('navigation', { name: 'Sections' })).not.toBeInTheDocument();
+  });
+
+  /**
+   * The important one. Nothing in the questionnaire or the photo step is persisted, so
+   * leaving abandons the screening in progress — which is why AccountMenu keeps Home and
+   * New assessment two taps deep. Putting the same destinations one tap away in the bar
+   * would undo that, so the links go away for the duration of a screening.
+   */
+  it('withdraws them for the duration of a screening', () => {
+    patient = { id: 'p1' };
+    setup({ step: 2, totalSteps: 3 });
+
+    expect(screen.queryByRole('navigation', { name: 'Sections' })).not.toBeInTheDocument();
+    expect(screen.getByText('Step 2 of 3')).toBeInTheDocument();
+  });
+
+  it('keeps them on a screen that has a back control', () => {
+    patient = { id: 'p1' };
+    setup({ back: '/home', title: 'Past assessments' });
+
+    expect(screen.getByRole('navigation', { name: 'Sections' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Go back' })).toBeInTheDocument();
+  });
+});
+
+/**
+ * The width tier. What it controls is a custom property the stylesheet reads, so the class
+ * is the contract — jsdom resolves no CSS, and asserting a computed max-width here would
+ * assert nothing.
+ */
+describe('width tiers', () => {
+  it('puts a screen on the task tier by default', () => {
+    const { container } = setup();
+
+    expect(container.querySelector('.app-shell')).toHaveClass('app-shell--task');
+  });
+
+  it('puts a screen on the read tier when asked', () => {
+    const { container } = setup({ width: 'read' });
+
+    expect(container.querySelector('.app-shell')).toHaveClass('app-shell--read');
+  });
+});
+
 describe('chrome', () => {
   it('renders children in the main landmark with a skip link', () => {
     setup();
@@ -57,9 +149,11 @@ describe('chrome', () => {
     expect(screen.queryByRole('button', { name: 'Go back' })).not.toBeInTheDocument();
   });
 
-  // One destination for both cases: PatientLanding resolves `/` to the home screen when a
-  // patient is signed in and to phone/OTP entry when not, so the brand does not branch.
-  it('sends the brand to the landing route', async () => {
+  // The brand branches now. `/` used to resolve to the home screen for a signed-in patient
+  // and the landing page for everyone else, so one destination served both; `/` is always
+  // the landing page now, so the brand has to pick. Deliberately not `/start` for a visitor
+  // — tapping the brand asks for the front door, not the OTP form.
+  it('sends the brand to the landing page for a visitor', async () => {
     const { user } = setup();
 
     await user.click(screen.getByRole('button', { name: /OralScreen/ }));
@@ -67,13 +161,13 @@ describe('chrome', () => {
     expect(navigate).toHaveBeenCalledWith('/');
   });
 
-  it('still routes the brand home for a signed-in patient', async () => {
+  it('sends the brand to `/home` for a signed-in patient', async () => {
     patient = { id: 'p1' };
     const { user } = setup();
 
     await user.click(screen.getByRole('button', { name: /OralScreen/ }));
 
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(navigate).toHaveBeenCalledWith('/home');
   });
 
   it('shows the account menu only once a patient is signed in', () => {

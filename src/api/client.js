@@ -302,5 +302,26 @@ export const api = {
    */
   getAdminMetrics: (adminKey) => adminRequest('/api/admin/metrics', adminKey),
 
+  /**
+   * Per-assessment AI spend, paged.
+   *
+   * `from`/`to` are ISO-8601 instants and both are optional — omitting either lets the
+   * server apply its own default (beginning of the pilot, and now). Omitted params are left
+   * off the query string entirely rather than sent empty, so the server's defaults apply
+   * instead of an unparseable blank.
+   *
+   * `size` is clamped server-side to 200, and a negative `page` is floored to 0. Read `page`
+   * and `size` back off the response rather than assuming the request was honoured.
+   */
+  getAdminCosts: (adminKey, { from, to, page, size } = {}) => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    if (page != null) params.set('page', String(page));
+    if (size != null) params.set('size', String(size));
+    const query = params.toString();
+    return adminRequest(`/api/admin/costs${query ? `?${query}` : ''}`, adminKey);
+  },
+
   resolveApiUrl,
 };

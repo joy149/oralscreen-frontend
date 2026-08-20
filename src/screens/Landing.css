@@ -1,7 +1,8 @@
-/* The public front door. Unlike every product screen, this page is not confined to
-   --max-width: those 480px exist so a clinical form stays thumb-reachable, and applying
-   them here is what made the app read as an internal tool to anyone who wasn't already
-   a patient. */
+/* The public front door. Its wrap matches --wrap-page, the app shell's frame, so the
+   product does not change width when a visitor signs in. It is deliberately not on
+   --wrap-task: that measure exists so a clinical form stays thumb-reachable, and applying
+   it here is what made the app read as an internal tool to anyone who wasn't already a
+   patient. */
 
 /* Keep this element free of `overflow`. Setting one axis makes CSS compute the other
    to `auto`, which turns this into a scroll container — and a scroll container becomes

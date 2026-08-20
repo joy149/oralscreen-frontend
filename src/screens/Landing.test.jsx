@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import Landing from './Landing';
+import { PatientProvider } from '../context/PatientContext';
 import { routerFuture } from '../test/utils';
 
 const navigate = vi.fn();
@@ -13,16 +14,29 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => navigate };
 });
 
+// The page reads the session to decide where its calls to action point, so it needs a real
+// provider. `PatientProvider` hydrates from localStorage on first render — seeding the key
+// before rendering is how a signed-in visitor is set up.
 function renderLanding() {
   return render(
     <MemoryRouter future={routerFuture}>
-      <Landing />
+      <PatientProvider>
+        <Landing />
+      </PatientProvider>
     </MemoryRouter>
+  );
+}
+
+function signIn() {
+  localStorage.setItem(
+    'oralscreen_patient',
+    JSON.stringify({ id: 'p1', name: 'Asha', phoneNumber: '+919876543210' })
   );
 }
 
 beforeEach(() => {
   navigate.mockClear();
+  localStorage.clear();
 });
 
 /**
@@ -51,6 +65,33 @@ describe('the landing page', () => {
     await user.click(screen.getAllByRole('button', { name: label })[0]);
 
     expect(navigate).toHaveBeenCalledWith('/start');
+  });
+
+  /**
+   * `/` is the landing page for everyone now, so a patient with a live session reaches it
+   * from the brand, a bookmark or a shared link. Sending them through the OTP form they
+   * have already completed is the failure this guards against — the page stays the same,
+   * only the destination and the label change.
+   */
+  it.each([
+    'My screenings',
+    'Go to my screenings',
+  ])('sends "%s" straight to /home for a patient who is already signed in', async (label) => {
+    signIn();
+    const user = userEvent.setup();
+    renderLanding();
+
+    await user.click(screen.getAllByRole('button', { name: label })[0]);
+
+    expect(navigate).toHaveBeenCalledWith('/home');
+  });
+
+  it('offers no sign-in call to action at all once a patient is signed in', () => {
+    signIn();
+    renderLanding();
+
+    expect(screen.queryByRole('button', { name: 'Start free screening' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Start a screening' })).not.toBeInTheDocument();
   });
 
   it('keeps a way in for clinicians without giving them the hero', async () => {

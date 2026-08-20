@@ -36,6 +36,8 @@ export default function AccountMenu() {
   function handleLogout() {
     setOpen(false);
     clearPatient();
+    // `/` is the public landing page for everyone now, so this lands where it always meant
+    // to rather than relying on the session being gone by the time the route re-resolves.
     navigate('/', { replace: true });
   }
 
@@ -60,7 +62,7 @@ export default function AccountMenu() {
               deliberate taps on purpose: like "New assessment" below it, leaving mid-
               screening abandons the current one, which is not something to put one stray
               tap away from a patient part-way through. */}
-          <button type="button" role="menuitem" className="account-menu__item" onClick={() => go('/')}>
+          <button type="button" role="menuitem" className="account-menu__item" onClick={() => go('/home')}>
             <Home size={16} />
             <span>Home</span>
           </button>

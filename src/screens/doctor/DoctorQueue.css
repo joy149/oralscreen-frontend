@@ -9,7 +9,7 @@
   margin-bottom: var(--space-1);
   color: var(--color-primary);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -49,7 +49,7 @@
   background: var(--color-paper-raised);
   color: var(--color-ink-soft);
   font-size: 0.825rem;
-  font-weight: 600;
+  font-weight: var(--weight-label);
   line-height: 1.2;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
@@ -90,7 +90,7 @@
   background: none;
   color: var(--color-ink-faint);
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: var(--weight-label);
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
@@ -129,13 +129,13 @@
 .doctor-queue__row--header > span:first-child { grid-column: 2; } /* skip the edge track */
 .doctor-queue__row--header [role='columnheader'] {
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 .doctor-queue__row--header > span:not([role='columnheader']):not(.doctor-queue__col--submitted):not(.doctor-queue__col--risk) {
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
@@ -210,7 +210,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-weight: 600;
+  font-weight: var(--weight-label);
   font-size: 0.82rem;
 }
 .doctor-queue__row .is-reviewed { color: var(--color-ink-soft); }

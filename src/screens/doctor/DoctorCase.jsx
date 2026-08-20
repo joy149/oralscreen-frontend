@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, api } from '../../api/client';
 import DoctorShell from '../../components/doctor/DoctorShell';
 import RiskTier from '../../components/doctor/RiskTier';
+import NotesEditor from '../../components/doctor/NotesEditor';
 import ErrorState from '../../components/shared/ErrorState';
 import { CaseSkeleton } from '../../components/shared/Skeleton';
 import { useToast } from '../../components/shared/Toast';
@@ -346,7 +347,12 @@ export default function DoctorCase() {
               </div>
               <div className="field">
                 <label htmlFor="doctor-notes">Clinical notes</label>
-                <textarea id="doctor-notes" rows="5" value={notes} onChange={(e) => { setNotes(e.target.value); setSaved(false); }} placeholder="Add your observations or follow-up recommendation" />
+                <NotesEditor
+                  id="doctor-notes"
+                  value={notes}
+                  onChange={(next) => { setNotes(next); setSaved(false); }}
+                  placeholder="Add your observations or follow-up recommendation"
+                />
               </div>
               {submitError && <p className="doctor-case__submit-error" role="alert">{submitError}</p>}
               {saved && <p className="doctor-case__saved" role="status">Review saved. You can update it again at any time.</p>}

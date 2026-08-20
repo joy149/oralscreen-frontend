@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
+import { usePatient } from '../context/PatientContext';
 import oralscreenLogo from '../assets/oralscreen-mark.png';
 import './Landing.css';
 
@@ -12,8 +13,10 @@ import './Landing.css';
  * reasonable front door for staff and a terrible one for the patients this is aimed at,
  * who are being asked to photograph the inside of their own mouth.
  *
- * <p>The signed-in patient never sees this page — `PatientLanding` in App.jsx resolves `/`
- * to `PatientHome` for them. Sign-in itself moved to `/start`.
+ * <p>A signed-in patient does see this page: `/` is the landing page for everyone, and the
+ * brand, a bookmark or a shared link all lead here. The page reads the session and swaps
+ * where its calls to action point — to `/home` rather than through the OTP form they have
+ * already been through — but the page itself does not change. Sign-in lives at `/start`.
  *
  * <p>Every claim here is drawn from the product, not invented: the six questionnaire
  * items and the duration question come from QuestionnaireForm, the four capture angles
@@ -303,7 +306,14 @@ export default function Landing() {
     });
   }
 
-  const startScreening = () => navigate('/start');
+  const { patient } = usePatient();
+  // Every call to action on the page routes through here. For a visitor it means "sign in
+  // and screen"; for a patient with a live session the sign-in half is already done, so it
+  // means "go to your screenings" — the same button, a different destination and label,
+  // rather than a second version of the page.
+  const signedIn = Boolean(patient);
+  const startScreening = () => navigate(signedIn ? '/home' : '/start');
+  const startLabel = signedIn ? 'Go to my screenings' : 'Start free screening';
 
   return (
     <div className="landing" ref={rootRef}>
@@ -341,7 +351,7 @@ export default function Landing() {
               className="landing-btn landing-btn--primary landing-btn--sm"
               onClick={startScreening}
             >
-              Start a screening
+              {signedIn ? 'My screenings' : 'Start a screening'}
             </button>
           </div>
         </div>
@@ -371,7 +381,7 @@ export default function Landing() {
                 className="landing-btn landing-btn--primary"
                 onClick={startScreening}
               >
-                Start free screening
+                {startLabel}
                 <ArrowRight size={16} />
               </button>
               <a
@@ -675,7 +685,7 @@ export default function Landing() {
                 className="landing-btn landing-btn--on-deep"
                 onClick={startScreening}
               >
-                Start free screening
+                {startLabel}
                 <ArrowRight size={16} />
               </button>
             )}
@@ -894,7 +904,7 @@ export default function Landing() {
               className="landing-btn landing-btn--primary"
               onClick={startScreening}
             >
-              Start free screening
+              {startLabel}
               <ArrowRight size={16} />
             </button>
             <a

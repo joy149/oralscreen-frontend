@@ -63,9 +63,10 @@ export default function PastAssessments() {
 
   // Explicit `back` path for the same reason as PatientProfile — and here history-back was
   // worse: arriving from a result detail, which itself backs out to this list, made "back"
-  // return to the screen the patient had just left.
+  // return to the screen the patient had just left. `/home`, not `/`: this screen only
+  // renders for a signed-in patient, and `/` is the public landing page for them too.
   return (
-    <AppShell back="/" title="Past assessments">
+    <AppShell back="/home" title="Past assessments" width="read">
       <PageTransition>
         <div className="screen past-assessments">
           <div className="past-assessments__intro">

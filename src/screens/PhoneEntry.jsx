@@ -146,7 +146,7 @@ export default function PhoneEntry() {
         // patient, as likely to be checking a result as starting a screening. Home offers
         // both; a first-time registration (handleDetailsSubmit) still goes straight to the
         // questionnaire, where home would only show them an empty history.
-        navigate('/');
+        navigate('/home');
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
           setStage('details');
@@ -198,10 +198,9 @@ export default function PhoneEntry() {
   }
 
   return (
-    <AppShell clinicianLink wide>
+    <AppShell clinicianLink width="read">
       <PageTransition>
         <div className="screen phone-entry">
-          <div className="phone-entry__orb" aria-hidden="true" />
           {/* No reCAPTCHA container here on purpose: it is created on <body> by
               config/firebase so one warmed verifier can outlive this screen. */}
 
