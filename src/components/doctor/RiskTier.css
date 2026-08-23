@@ -9,7 +9,7 @@
   background: var(--color-paper-raised);
   color: var(--color-ink-soft);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   white-space: nowrap;
 }
 
@@ -21,22 +21,22 @@
 }
 
 .risk-tier--no_mild_risk {
-  border-color: #b9d0bf;
+  border-color: var(--color-risk-mild);
   background: var(--color-risk-mild-soft);
-  color: #386248;
+  color: var(--color-risk-mild-ink);
 }
 .risk-tier--no_mild_risk > span { background: var(--color-risk-mild); }
 
 .risk-tier--moderate_risk {
-  border-color: #e7c993;
+  border-color: var(--color-risk-moderate);
   background: var(--color-risk-moderate-soft);
-  color: #805718;
+  color: var(--color-risk-moderate-ink);
 }
 .risk-tier--moderate_risk > span { background: var(--color-risk-moderate); }
 
 .risk-tier--high_risk {
-  border-color: #e3b2ad;
+  border-color: var(--color-risk-high);
   background: var(--color-risk-high-soft);
-  color: #85332d;
+  color: var(--color-risk-high-ink);
 }
 .risk-tier--high_risk > span { background: var(--color-risk-high); }

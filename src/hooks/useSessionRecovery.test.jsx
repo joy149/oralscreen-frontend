@@ -44,7 +44,7 @@ describe('on a 401', () => {
   it('replaces the history entry with sign-in and flags the expiry', () => {
     handler()(new ApiError('Unauthorized', 401, null));
 
-    expect(navigate).toHaveBeenCalledWith('/', {
+    expect(navigate).toHaveBeenCalledWith('/start', {
       replace: true,
       state: { sessionExpired: true },
     });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { WifiOff, ArrowLeft } from 'lucide-react';
 import { usePatient } from '../../context/PatientContext';
@@ -30,10 +30,29 @@ function reviewerLine() {
 
 const STEP_LABELS = ['Symptoms', 'Photos', 'Result'];
 
+// Only for a signed-in patient, and only where there is room. On a phone these same
+// destinations live in the account menu, which is why this can disappear entirely rather
+// than collapsing into a hamburger.
+const NAV_LINKS = [
+  { path: '/home', label: 'Home' },
+  { path: '/assessments', label: 'Screenings' },
+  { path: '/profile', label: 'Profile' },
+];
+
 /**
  * `back` accepts `true` (history back), a path string, or a callback.
  * When set, the bar swaps the brand for a back control and renders `title`
  * as the screen's <h1> — so the screen body should not repeat it.
+ *
+ * `width` picks the content tier — see --wrap-page / --wrap-task in tokens.css.
+ * `'task'` (the default) is the measure a clinical form is filled in at; `'read'` is for
+ * overview screens, which lay out across the full frame on a desktop.
+ *
+ * <p>The chrome is never on either tier. The header, the footer and the offline banner
+ * always span --wrap-page, whatever the content does. They used to inherit the content's
+ * 480px cap, which put the brand in the middle of a desktop window with nothing under it —
+ * that, rather than the narrow column itself, was most of what made the app read as a
+ * phone app someone had opened on a laptop.
  */
 export default function AppShell({
   children,
@@ -42,10 +61,12 @@ export default function AppShell({
   back,
   title,
   clinicianLink = false,
+  width = 'task',
 }) {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const { patient } = usePatient();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   useEffect(() => {
     function handleOnline() { setIsOffline(false); }
@@ -68,7 +89,7 @@ export default function AppShell({
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell app-shell--${width}`}>
       <a className="skip-link" href="#main">Skip to content</a>
       <header className="app-shell__header">
         <div className="app-shell__bar">
@@ -82,9 +103,11 @@ export default function AppShell({
               <ArrowLeft size={20} />
             </button>
           ) : (
-            /* Both destinations are `/`: PatientLanding resolves it to the home screen for
-               a signed-in patient and to phone/OTP entry for everyone else, so the brand
-               does not need to know which one it is sending people to.
+            /* `/home` for a signed-in patient, `/` for everyone else. This used to be `/`
+               for both because the route itself forked on the session; now that `/` is
+               always the landing page the brand has to make the choice. Deliberately not
+               `/start` for a signed-out visitor — someone who taps the brand wants the
+               front door, not the OTP form.
 
                Note this is live during the questionnaire flow, where the shell renders the
                brand rather than a back control and neither the in-progress answers nor
@@ -93,7 +116,7 @@ export default function AppShell({
             <button
               type="button"
               className="app-shell__brand"
-              onClick={() => navigate('/')}
+              onClick={() => navigate(patient ? '/home' : '/')}
               aria-label="OralScreen — go to home"
             >
               <img src={oralscreenLogo} alt="" className="app-shell__logo" width="32" height="32" />
@@ -102,6 +125,29 @@ export default function AppShell({
           )}
 
           {back && title && <h1 className="app-shell__bar-title">{title}</h1>}
+
+          {/* Hidden for the duration of a screening — `showSteps` is what "mid-flow" means
+              here. Nothing in the questionnaire or the photo step is persisted, so leaving
+              abandons it; that is why AccountMenu keeps Home and New assessment two taps
+              deep, and putting the same destinations one tap away in the bar would undo it.
+              Everywhere else they show, including in `back` mode: these are top-level
+              sections reached from this bar, so having the bar drop them on arrival is what
+              would be strange. */}
+          {patient && !showSteps && (
+            <nav className="app-shell__links" aria-label="Sections">
+              {NAV_LINKS.map((link) => (
+                <button
+                  type="button"
+                  key={link.path}
+                  className="app-shell__link"
+                  aria-current={pathname === link.path ? 'page' : undefined}
+                  onClick={() => navigate(link.path)}
+                >
+                  {link.label}
+                </button>
+              ))}
+            </nav>
+          )}
 
           {patient ? <AccountMenu /> : <span className="app-shell__bar-spacer" />}
         </div>

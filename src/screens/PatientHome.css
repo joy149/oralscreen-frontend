@@ -1,11 +1,81 @@
-.patient-home__greeting {
-  margin-bottom: var(--space-5);
+/* The screen is a hero and a section, laid out the way the landing page lays itself out.
+   It used to be a greeting stacked above a two-column grid, which put three different
+   content widths on screen — the greeting's measure, the left column, the right column —
+   with no rule or alignment tying them to each other. Aligning the frame to the landing
+   page's wrap was not enough on its own; the page inside the frame had none of its
+   structure. */
+/* The hero's own trailing space plus the section's leading space is the gap between the
+   two halves of the page. On a phone that pair wants to be one comfortable gap, not two
+   generous ones stacked. */
+.patient-home__hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-bottom: var(--space-5);
 }
 
-.patient-home__greeting p {
-  margin-top: var(--space-2);
+.patient-home__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
   color: var(--color-ink-faint);
+  margin-bottom: var(--space-4);
+}
+
+/* The rule is the landing page's, and it is what makes an eyebrow read as a label rather
+   than as small text that happens to be above a heading. */
+.patient-home__eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: var(--color-line-strong);
+  flex: none;
+}
+
+/* Matches the landing page's display treatment so the first screen after signing in is
+   recognisably the same product as the one that got them here. */
+.patient-home__hero h1 {
+  font-size: var(--text-2xl);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.patient-home__lede {
+  margin-top: var(--space-3);
+  color: var(--color-ink-soft);
   font-size: 0.9375rem;
+  line-height: 1.6;
+  /* In characters rather than ems, and short enough that this always breaks into two
+     balanced lines instead of orphaning the last word. */
+  max-width: 34ch;
+}
+
+.patient-home__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (min-width: 900px) {
+  /* Copy on the left, the action on the right — the landing page's hero proportions. The
+     action column is the narrower one and still carries the loudest element on the page,
+     which is what keeps it dominant without it spanning the whole frame. */
+  .patient-home__hero {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 460px);
+    gap: var(--space-8);
+    align-items: center;
+    min-height: 240px;
+    padding-bottom: var(--space-7);
+  }
+
+  .patient-home__hero h1 { font-size: clamp(34px, 3.4vw, 46px); }
+  .patient-home__lede { font-size: var(--text-base); }
 }
 
 /* --- Primary action ------------------------------------------------------ */
@@ -72,61 +142,167 @@
   opacity: 0.8;
 }
 
-/* --- Awaiting-review card ------------------------------------------------ */
+/* --- Screening progress rail --------------------------------------------- */
 
-/* Chained with .card deliberately. Both rules are single-class, and global.css is injected
-   after the screen stylesheets — so an unchained `.patient-home__awaiting` loses its
-   background and border to `.card` and renders as a plain white row. */
-.card.patient-home__awaiting {
+/* Replaces a single amber card that read "with your dentist now". The card was accurate
+   and told a patient nothing they could act on: it looked identical an hour after
+   submitting and a week after submitting. */
+/* The bottom margin is not decoration: `.patient-home__recent` draws the rule that divides
+   the page, and without it that rule lands flush against this card's own border and reads
+   as a doubled edge. */
+.patient-home__rail {
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.patient-home__rail-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+  justify-content: space-between;
   gap: var(--space-4);
-  width: 100%;
-  text-align: left;
-  margin-top: var(--space-4);
-  cursor: pointer;
-  border: 1px solid var(--color-risk-moderate);
-  background: var(--color-risk-moderate-soft);
-  color: var(--color-risk-moderate-ink);
-  transition: box-shadow var(--duration-normal) var(--ease-smooth);
+  margin-bottom: var(--space-5);
 }
 
-.card.patient-home__awaiting:hover {
-  box-shadow: var(--shadow-card-hover);
+.patient-home__rail-head h2 {
+  font-size: var(--text-base);
+  letter-spacing: -0.01em;
 }
 
-.patient-home__awaiting-icon {
-  display: flex;
-  flex-shrink: 0;
+.patient-home__rail-open {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-pill);
-  background: rgba(201, 138, 44, 0.16);
+  gap: 2px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  padding: var(--space-1) 0;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-label);
+  cursor: pointer;
 }
 
-.patient-home__awaiting-text {
+.patient-home__rail-open:hover { text-decoration: underline; }
+
+.patient-home__rail-track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-  flex: 1;
+  gap: var(--space-4);
 }
 
-.patient-home__awaiting-text strong {
-  font-size: 0.9375rem;
+.patient-home__stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.patient-home__awaiting-text small {
+.patient-home__stage-pip {
+  display: block;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--color-paper);
+  border: 2px solid var(--color-line-strong);
+}
+
+.patient-home__stage.is-done .patient-home__stage-pip {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* The stage in progress is the one the patient came to see, so it is the only one that
+   carries the waiting colour — and a halo, which reads as state rather than as another
+   dot in a different colour. */
+.patient-home__stage.is-current .patient-home__stage-pip {
+  background: var(--color-risk-moderate);
+  border-color: var(--color-risk-moderate);
+  box-shadow: 0 0 0 4px var(--color-risk-moderate-soft);
+}
+
+.patient-home__stage-label {
   font-size: var(--text-sm);
-  line-height: 1.4;
+  font-weight: var(--weight-label);
+  color: var(--color-ink);
+}
+
+.patient-home__stage:not(.is-done):not(.is-current) .patient-home__stage-label {
+  color: var(--color-ink-faint);
+  font-weight: var(--weight-body);
+}
+
+.patient-home__stage-when {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-faint);
+  text-align: right;
+}
+
+.patient-home__stage.is-current .patient-home__stage-when {
+  color: var(--color-risk-moderate-ink);
+}
+
+/* Horizontal once there is room, with the connecting line drawn between the pips. Below
+   this it stays a vertical list — four stages side by side on a phone would truncate every
+   label to fit. */
+@media (min-width: 720px) {
+  .patient-home__rail-track {
+    flex-direction: row;
+    gap: 0;
+  }
+
+  .patient-home__stage {
+    flex: 1;
+    display: block;
+    padding-right: var(--space-4);
+  }
+
+  /* The line is drawn from each pip to the next rather than as one bar behind them, so it
+     cannot show through a pip or overhang the ends of the rail. */
+  .patient-home__stage:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 19px;
+    right: var(--space-2);
+    height: 2px;
+    background: var(--color-line);
+  }
+
+  .patient-home__stage.is-done:not(:last-child)::before {
+    background: var(--color-primary);
+  }
+
+  .patient-home__stage-label {
+    display: block;
+    margin-top: var(--space-3);
+  }
+
+  .patient-home__stage-when {
+    display: block;
+    text-align: left;
+    margin-top: 2px;
+  }
 }
 
 /* --- Recent screenings --------------------------------------------------- */
 
+/* The section is ruled off from the hero rather than merely spaced from it — the rule is
+   what tells you the page has two parts. */
 .patient-home__recent {
-  margin-top: var(--space-6);
+  min-width: 0;
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-line);
 }
 
 .patient-home__recent-head {
@@ -134,12 +310,15 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .patient-home__recent-head h2 {
   font-size: var(--text-lg);
+  letter-spacing: -0.015em;
 }
+
+.patient-home__see-all { font-variant-numeric: tabular-nums; }
 
 .patient-home__see-all {
   flex-shrink: 0;
@@ -162,6 +341,20 @@
   gap: var(--space-3);
 }
 
+/* Cards across, not full-width rows down. A row here carries a date and a review status
+   and nothing else — deliberately, since the risk tier stays one tap deeper — so stretched
+   across 1140px it is a line of text, a void, and a chevron on the far edge. `auto-fill`
+   rather than `auto-fit` so a single screening keeps a card's width instead of expanding
+   back into the row this is replacing. */
+@media (min-width: 900px) {
+  .patient-home__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-4);
+  }
+
+}
+
 .card.patient-home__row {
   display: flex;
   align-items: center;
@@ -179,6 +372,7 @@
 .card.patient-home__row:hover {
   border-color: var(--color-primary);
   box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 
 .patient-home__row-main {
@@ -188,8 +382,14 @@
   min-width: 0;
 }
 
+/* The date is the thing a patient compares between rows, so it gets tabular figures
+   and the mono face the rest of the system uses for data. */
 .patient-home__row-main strong {
-  font-size: 0.9375rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 /* Scoped copies rather than a reach into PastAssessments.css: these rows must not

@@ -47,13 +47,13 @@ export default function PastAssessmentDetail() {
   useEffect(() => { loadAssessment(); }, [loadAssessment]);
 
   if (!patient) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/start" replace />;
   }
 
   const reviewed = Boolean(assessment?.doctorRiskClassification);
 
   return (
-    <AppShell back="/assessments" title="Screening result">
+    <AppShell back="/assessments" title="Screening result" width="read">
       <PageTransition>
         <div className="screen past-assessment-detail">
           {loading && <DetailSkeleton />}
@@ -78,32 +78,33 @@ export default function PastAssessmentDetail() {
                 <RiskTier classification={assessment.aiRiskClassification} />
               </header>
 
-              <section className="card past-assessment-detail__section">
-                <h2>Summary</h2>
-                <p>{assessment.patientFacingSummary || 'No summary was provided for this screening.'}</p>
-                <dl className="past-assessment-detail__facts">
-                  <div>
-                    <dt>Suggested specialist</dt>
-                    <dd>{assessment.recommendedSpecialistDisplayName || 'Not specified'}</dd>
-                  </div>
-                </dl>
-              </section>
-
-              {assessment.homeCareRecommendations && (
+              <div className="past-assessment-detail__grid">
                 <section className="card past-assessment-detail__section">
-                  <h2>Home care recommendations</h2>
-                  <p>{assessment.homeCareRecommendations}</p>
+                  <h2>Summary</h2>
+                  <p>{assessment.patientFacingSummary || 'No summary was provided for this screening.'}</p>
+                  <dl className="past-assessment-detail__facts">
+                    <div>
+                      <dt>Suggested specialist</dt>
+                      <dd>{assessment.recommendedSpecialistDisplayName || 'Not specified'}</dd>
+                    </div>
+                  </dl>
                 </section>
-              )}
 
-              <section className="card past-assessment-detail__section past-assessment-detail__section--notes">
-                <h2>Doctor's notes</h2>
-                {reviewed ? (
-                  <>
-                    <dl className="past-assessment-detail__facts">
-                      <div>
-                        <dt>Doctor's assessment</dt>
-                        <dd><RiskTier classification={assessment.doctorRiskClassification} /></dd>
+                {assessment.homeCareRecommendations && (
+                  <section className="card past-assessment-detail__section">
+                    <h2>Home care recommendations</h2>
+                    <p>{assessment.homeCareRecommendations}</p>
+                  </section>
+                )}
+
+                <section className="card past-assessment-detail__section past-assessment-detail__section--notes">
+                  <h2>Doctor's notes</h2>
+                  {reviewed ? (
+                    <>
+                      <dl className="past-assessment-detail__facts">
+                        <div>
+                          <dt>Doctor's assessment</dt>
+                          <dd><RiskTier classification={assessment.doctorRiskClassification} /></dd>
                       </div>
                       {assessment.reviewedByDoctorName && (
                         <div>
@@ -127,7 +128,8 @@ export default function PastAssessmentDetail() {
                     A doctor hasn't reviewed this screening yet. Check back soon.
                   </p>
                 )}
-              </section>
+                </section>
+              </div>
             </>
           )}
         </div>

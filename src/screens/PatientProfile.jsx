@@ -41,7 +41,7 @@ export default function PatientProfile() {
   }, []);
 
   if (!patient) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/start" replace />;
   }
 
   async function handleSubmit(e) {
@@ -70,9 +70,13 @@ export default function PatientProfile() {
 
   // `back` is an explicit path, not history-back: this screen opens from the account menu
   // on any screen, so `navigate(-1)` sent patients somewhere different each time — and
-  // straight out of the app when they arrived on a deep link.
+  // straight out of the app when they arrived on a deep link. `/home`, not `/`, now that
+  // `/` is the public landing page for a signed-in patient too.
+  //
+  // Left on the default `task` tier rather than `read`: it is a short form, and a form is
+  // filled in at a measure, not across a window.
   return (
-    <AppShell back="/" title="Your profile">
+    <AppShell back="/home" title="Your profile">
       <PageTransition>
         <div className="screen patient-profile">
           <div className="patient-profile__intro">

@@ -26,7 +26,7 @@ function renderDetail(id = 'a1') {
     <MemoryRouter initialEntries={[`/assessments/${id}`]} future={routerFuture}>
       <Routes>
         <Route path="/assessments/:assessmentId" element={<PastAssessmentDetail />} />
-        <Route path="/" element={<p>Sign in screen</p>} />
+        <Route path="/start" element={<p>Sign in screen</p>} />
       </Routes>
     </MemoryRouter>
   );

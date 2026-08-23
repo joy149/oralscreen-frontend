@@ -10,7 +10,9 @@ import App from './App';
  * that the lazy clinician/admin chunks are suspended rather than eagerly bundled. The
  * screens' own behaviour is covered by their own suites.
  */
+vi.mock('./screens/Landing', () => ({ default: () => <p>Landing</p> }));
 vi.mock('./screens/PhoneEntry', () => ({ default: () => <p>PhoneEntry</p> }));
+vi.mock('./screens/PatientHome', () => ({ default: () => <p>PatientHome</p> }));
 vi.mock('./screens/QuestionnaireForm', () => ({ default: () => <p>QuestionnaireForm</p> }));
 vi.mock('./screens/PhotoUpload', () => ({ default: () => <p>PhotoUpload</p> }));
 vi.mock('./screens/AssessmentPending', () => ({ default: () => <p>AssessmentPending</p> }));
@@ -48,7 +50,9 @@ function renderAt(path) {
 
 describe('the patient routes', () => {
   it.each([
-    ['/', 'PhoneEntry'],
+    ['/', 'Landing'],
+    ['/home', 'PatientHome'],
+    ['/start', 'PhoneEntry'],
     ['/questionnaire', 'QuestionnaireForm'],
     ['/questionnaire/q1', 'QuestionnaireForm'],
     ['/questionnaire/q1/photos', 'PhotoUpload'],
@@ -60,6 +64,45 @@ describe('the patient routes', () => {
     renderAt(path);
 
     expect(await screen.findByText(screenName)).toBeInTheDocument();
+  });
+
+  it('keeps the sign-in form off `/` so a stranger meets the landing page first', async () => {
+    renderAt('/');
+
+    await screen.findByText('Landing');
+    expect(screen.queryByText('PhoneEntry')).not.toBeInTheDocument();
+  });
+
+  /**
+   * The regression this pair exists to catch. `/` used to fork on the session and render
+   * `PatientHome` for a signed-in patient, so one URL answered as two screens. It is the
+   * landing page for everyone now — including a patient with a live session, who reaches
+   * it from the brand, a bookmark or a shared link. `PatientProvider` hydrates from
+   * localStorage on first render, so seeding the key before rendering is enough to put a
+   * live session in place.
+   */
+  it('keeps `/` on the landing page even when a patient is signed in', async () => {
+    localStorage.setItem(
+      'oralscreen_patient',
+      JSON.stringify({ id: 'p1', name: 'Asha', phoneNumber: '+919876543210' })
+    );
+
+    renderAt('/');
+
+    expect(await screen.findByText('Landing')).toBeInTheDocument();
+    expect(screen.queryByText('PatientHome')).not.toBeInTheDocument();
+  });
+
+  it('gives a signed-in patient their home screen at `/home`', async () => {
+    localStorage.setItem(
+      'oralscreen_patient',
+      JSON.stringify({ id: 'p1', name: 'Asha', phoneNumber: '+919876543210' })
+    );
+
+    renderAt('/home');
+
+    expect(await screen.findByText('PatientHome')).toBeInTheDocument();
+    expect(screen.queryByText('Landing')).not.toBeInTheDocument();
   });
 
   it('puts none of them behind the doctor guard', async () => {
@@ -112,7 +155,7 @@ describe('code splitting', () => {
     }
   );
 
-  it.each(['PhoneEntry', 'QuestionnaireForm', 'PhotoUpload', 'AssessmentPending'])(
+  it.each(['Landing', 'PhoneEntry', 'QuestionnaireForm', 'PhotoUpload', 'AssessmentPending'])(
     'imports %s eagerly — it is on the patient critical path',
     (screenName) => {
       expect(source).toMatch(new RegExp(`^import ${screenName} from`, 'm'));
@@ -123,6 +166,6 @@ describe('code splitting', () => {
     renderAt('/');
 
     expect(source).toContain('<Suspense fallback=');
-    expect(screen.getByText('PhoneEntry')).toBeInTheDocument();
+    expect(screen.getByText('Landing')).toBeInTheDocument();
   });
 });

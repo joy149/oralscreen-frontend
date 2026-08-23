@@ -1,11 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useDoctorSession } from '../../context/DoctorSessionContext';
 import oralscreenLogo from '../../assets/oralscreen-mark.png';
+import ClinicianThemeToggle from './ClinicianThemeToggle';
+import useClinicianTheme from './useClinicianTheme';
 import './DoctorShell.css';
 
 export default function DoctorShell({ children }) {
   const navigate = useNavigate();
   const { session, endSession } = useDoctorSession();
+  const { theme, toggleTheme } = useClinicianTheme();
 
   function signOut() {
     endSession();
@@ -21,7 +24,10 @@ export default function DoctorShell({ children }) {
         </button>
         <div className="doctor-shell__account">
           <span>{session?.name}</span>
-          <button type="button" onClick={signOut}>Sign out</button>
+          <ClinicianThemeToggle theme={theme} onToggle={toggleTheme} />
+          <button type="button" className="doctor-shell__signout" onClick={signOut}>
+            Sign out
+          </button>
         </div>
       </header>
       <main className="doctor-shell__main">{children}</main>

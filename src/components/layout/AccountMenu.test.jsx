@@ -75,9 +75,11 @@ describe('menu items', () => {
   });
 
   it.each([
-    // Home is the only way back to the landing screen from the questionnaire flow, where
-    // the shell renders the brand instead of a back control.
-    ['Home', '/'],
+    // Home is the only way back to the patient's own screen from the questionnaire flow,
+    // where the shell renders the brand instead of a back control. It points at `/home`
+    // rather than `/` — this menu only exists for a signed-in patient, and `/` is the
+    // public landing page for them too.
+    ['Home', '/home'],
     ['New assessment', '/questionnaire'],
     ['Profile', '/profile'],
     ['Past Assessments', '/assessments'],

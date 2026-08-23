@@ -42,7 +42,7 @@ function renderForm({ questionnaireId } = {}) {
       <Routes>
         <Route path="/questionnaire" element={<QuestionnaireForm />} />
         <Route path="/questionnaire/:questionnaireId" element={<QuestionnaireForm />} />
-        <Route path="/" element={<p>Sign in screen</p>} />
+        <Route path="/start" element={<p>Sign in screen</p>} />
       </Routes>
     </MemoryRouter>
   );
@@ -367,11 +367,11 @@ describe('error handling', () => {
     apiMock.submitQuestionnaire.mockRejectedValue(new ApiError('boom', 500, null));
     const { user } = renderForm();
 
-    await completeForm(user, { duration: 'DAYS_10_TO_1_MONTH', yesTo: ['Pain'] });
+    await completeForm(user, { duration: 'DAYS_20_TO_1_MONTH', yesTo: ['Pain'] });
     await user.click(screen.getByRole('button', { name: 'Continue to photos' }));
     await user.click(await screen.findByRole('button', { name: 'Review answers' }));
 
-    expect(screen.getByLabelText('How long have you noticed this?')).toHaveValue('DAYS_10_TO_1_MONTH');
+    expect(screen.getByLabelText('How long have you noticed this?')).toHaveValue('DAYS_20_TO_1_MONTH');
     expect(within(screen.getByRole('group', { name: 'Pain' })).getByRole('button', { name: 'Yes' }))
       .toHaveAttribute('aria-pressed', 'true');
   });

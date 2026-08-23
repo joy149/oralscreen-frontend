@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { PatientProvider, usePatient } from './context/PatientContext';
+import { PatientProvider } from './context/PatientContext';
+import Landing from './screens/Landing';
 import PhoneEntry from './screens/PhoneEntry';
 import PatientHome from './screens/PatientHome';
 import QuestionnaireForm from './screens/QuestionnaireForm';
@@ -22,21 +23,6 @@ const DoctorQueue = lazy(() => import('./screens/doctor/DoctorQueue'));
 const DoctorCase = lazy(() => import('./screens/doctor/DoctorCase'));
 const AdminDashboard = lazy(() => import('./screens/admin/AdminDashboard'));
 
-/**
- * `/` is the app's only front door, so it answers to whoever knocks: the sign-in form for
- * a stranger, the home screen for a patient who is already signed in.
- *
- * <p>A separate `/home` route was the alternative and is worse — it leaves `/` free to
- * show the OTP form to an authenticated patient whenever anything lands there, which is
- * the bug this replaces. Everything that already routes to `/` keeps working unchanged:
- * `useSessionRecovery` clears the patient before navigating (so it lands on sign-in, as
- * intended), and `AccountMenu`'s log out does the same.
- */
-function PatientLanding() {
-  const { patient } = usePatient();
-  return patient ? <PatientHome /> : <PhoneEntry />;
-}
-
 export default function App() {
   return (
     <PatientProvider>
@@ -45,7 +31,16 @@ export default function App() {
           <BrowserRouter>
             <Suspense fallback={<LoadingState message="Loading…" />}>
               <Routes>
-                <Route path="/" element={<PatientLanding />} />
+                {/* `/` is the public landing page unconditionally, including for a patient
+                    with a live session — it is the product's front door, and a front door
+                    that shows a different product to half its visitors is two front doors.
+                    It used to fork to `PatientHome` on `usePatient()`, which meant one URL
+                    answered as two screens and `PatientHome` could not carry the same
+                    `!patient` guard as every other patient screen. `Landing` reads the
+                    session itself now, and swaps its calls to action rather than the page. */}
+                <Route path="/" element={<Landing />} />
+                <Route path="/home" element={<PatientHome />} />
+                <Route path="/start" element={<PhoneEntry />} />
                 <Route path="/questionnaire" element={<QuestionnaireForm />} />
                 <Route path="/questionnaire/:questionnaireId" element={<QuestionnaireForm />} />
                 <Route path="/questionnaire/:questionnaireId/photos" element={<PhotoUpload />} />

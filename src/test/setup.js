@@ -14,17 +14,21 @@ if (!globalThis.URL.revokeObjectURL) {
   globalThis.URL.revokeObjectURL = vi.fn();
 }
 
+// A plain function, not vi.fn(): `restoreMocks` clears a spy's implementation after
+// every test, so a vi.fn() here returned undefined from the second test in a file
+// onwards — and anything reading `.matches` off it (the landing page's reduced-motion
+// check) blew up rather than seeing `false`. Same trap as HTMLMediaElement below.
 if (!globalThis.matchMedia) {
-  globalThis.matchMedia = vi.fn().mockImplementation((query) => ({
+  globalThis.matchMedia = (query) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  }));
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  });
 }
 
 // jsdom has no layout engine, so anything measuring an element gets zeros.

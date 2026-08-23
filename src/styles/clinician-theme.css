@@ -1,0 +1,209 @@
+/* Clinician theme
+   ---------------------------------------------------------------------------
+   The clinician side has its own light/dark switch; the patient side does not.
+   That asymmetry is deliberate — a patient passes through once, a reviewer sits
+   with these screens for a shift and should get to choose the surface.
+
+   This works by remapping the existing --color-* tokens inside the clinician
+   roots rather than introducing a parallel --clin-* set. Every clinician screen
+   is already token-driven, so one scoped block themes the shell, the queue, the
+   case view, the login form, the OTP boxes and every shared component inside
+   them. Rewriting each rule to a second token family would have been the same
+   result for far more churn, and would have left new rules free to drift.
+
+   The attribute lives on <html> because it is simplest to set from anywhere,
+   but the token overrides are scoped to .doctor-shell / .doctor-login so they
+   can never reach a patient screen even while the attribute is present. */
+
+[data-clinician-theme='dark'] .doctor-shell,
+[data-clinician-theme='dark'] .doctor-login {
+  /* Surfaces — a near-neutral ground carrying only a trace of the brand hue.
+     The previous palette used the landing page's deep green (#0C2A29); a ground
+     with that much hue of its own reads clinical and organic rather than like a
+     product surface, and it leaves nothing for the accent to stand against.
+     Modern dark modes keep the ground quiet and spend the colour on one accent. */
+  --color-paper: #0a1416;
+  --color-paper-sunken: #101d20;
+  --color-paper-raised: #16272a;
+
+  --color-line: rgba(232, 239, 238, 0.1);
+  --color-line-strong: rgba(232, 239, 238, 0.18);
+  --color-line-input: rgba(232, 239, 238, 0.26);
+
+  /* Ink — measured against the worst ground text actually lands on, which is not
+     the raised panel: an input's own 5% wash sits on top of the raised panel and
+     composites to #213134, and ::placeholder draws there in --color-ink-faint.
+     The previous palette checked only against the page (#0C2A29) and shipped
+     ink-faint at 4.1:1 on raised panels; the mock's replacement fixed that but
+     still measured 4.05:1 once the input wash was included. #859b99 is the floor
+     that clears AA on every ground in this theme, so there are three text levels
+     and no fourth — anything dimmer fails inside a field.
+        ink       13.3:1 raised · 11.6:1 input wash
+        ink-soft   6.9:1 raised ·  6.1:1 input wash
+        ink-faint  5.3:1 raised ·  4.6:1 input wash
+     Never pure white: primary ink keeps a trace of the ground's hue. */
+  --color-ink: #e8efee;
+  --color-ink-soft: #9db2b0;
+  --color-ink-faint: #859b99;
+
+  /* The brand teal is too dark to sit on the ground, so it lifts. That inverts
+     what a filled button needs for its label, hence --color-on-primary. */
+  --color-primary: #3ed9c4;
+  --color-primary-dark: #63e2d0;
+  --color-primary-soft: rgba(62, 217, 196, 0.14);
+  --color-on-primary: #04231f;
+
+  /* Risk stays an ordinal scale; the fills lift on dark and the chip text uses
+     the fill colour on a low-alpha wash of it, so a tier reads as one colour
+     rather than as a swatch plus unrelated text. The contrast that matters is
+     the text against its own wash, not against the panel — mild and moderate
+     clear it on the fill itself, but red at #f2726a lands on 4.49:1, so the
+     -ink for red lifts a shade while the fill stays put.
+     Text on its own wash over the raised panel:
+        mild 5.8:1 · moderate 6.1:1 · high 5.0:1 */
+  --color-risk-mild: #5fcb8a;
+  --color-risk-mild-soft: rgba(95, 203, 138, 0.14);
+  --color-risk-mild-ink: #5fcb8a;
+  --color-risk-moderate: #e8b34a;
+  --color-risk-moderate-soft: rgba(232, 179, 74, 0.14);
+  --color-risk-moderate-ink: #e8b34a;
+  --color-risk-high: #f2726a;
+  --color-risk-high-soft: rgba(242, 114, 106, 0.14);
+  --color-risk-high-ink: #f5807a;
+
+  --color-error: #f2726a;
+  --color-error-soft: rgba(242, 114, 106, 0.14);
+  --color-error-ink: #f5807a;
+  --color-success: #5fcb8a;
+  --color-success-soft: rgba(95, 203, 138, 0.14);
+  --color-success-ink: #5fcb8a;
+
+  /* Disabled tracks ink-faint. It measures 4.35:1 on its own fill, below the 4.5
+     AA threshold — deliberately. WCAG 1.4.3 exempts inactive controls, and a
+     disabled button that clears AA stops reading as disabled. Do not "fix" this
+     without also giving the disabled state another signal. */
+  --color-disabled-bg: rgba(232, 239, 238, 0.07);
+  --color-disabled-ink: #859b99;
+
+  /* The whole type scale steps down one notch. Light text on a dark ground
+     optically thickens, so the light-mode weights read a grade heavier than
+     they measure — 700 becomes black, 500 becomes semi-bold. */
+  --weight-heading: 600;
+  --weight-label: 500;
+  --weight-body: 400;
+
+  /* Dark surfaces lift by getting lighter, not by casting a shadow — a shadow on
+     a dark ground is invisible. Shadows stay only to seat floating elements. */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.55), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.6), 0 12px 36px rgba(0, 0, 0, 0.45);
+  --shadow-hero: 0 4px 12px rgba(0, 0, 0, 0.6), 0 40px 90px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
+
+/* Form controls come from global.css and are built for a light surface. Rather
+   than duplicating them, the few properties that assume a light ground are
+   corrected here — inside the clinician scope only. */
+[data-clinician-theme='dark'] .doctor-shell input,
+[data-clinician-theme='dark'] .doctor-shell select,
+[data-clinician-theme='dark'] .doctor-shell textarea,
+[data-clinician-theme='dark'] .doctor-login input,
+[data-clinician-theme='dark'] .doctor-login select,
+[data-clinician-theme='dark'] .doctor-login textarea {
+  background: rgba(232, 239, 238, 0.05);
+  color: var(--color-ink);
+}
+
+[data-clinician-theme='dark'] .doctor-shell ::placeholder,
+[data-clinician-theme='dark'] .doctor-login ::placeholder {
+  color: var(--color-ink-faint);
+  opacity: 1;
+}
+
+/* The OTP boxes are shared with patient sign-in, so they are corrected here
+   instead of in OtpInput.css — that file must keep working on warm paper. */
+[data-clinician-theme='dark'] .doctor-login .otp-box {
+  background: rgba(232, 239, 238, 0.05);
+  border-color: var(--color-line-input);
+  color: var(--color-ink);
+}
+
+[data-clinician-theme='dark'] .doctor-login .otp-box.is-filled {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+/* The login screen's corner bloom is a hardcoded light-mode teal (rgba(42,157,143))
+   painted for the warm paper ground. Left alone it turns muddy against the new
+   near-neutral dark ground and becomes the loudest thing on the page. It is
+   corrected here rather than tokenised in DoctorLogin.css so the light theme's
+   decorative colour — which is deliberately brighter than --color-primary —
+   stays exactly as it was. The alpha drops because the accent lifts: the same
+   0.16 against a ground this dark reads as a spotlight. */
+[data-clinician-theme='dark'] .doctor-login::before {
+  background: radial-gradient(circle, rgba(62, 217, 196, 0.09) 0%, transparent 66%);
+}
+
+/* Native dropdown options render on the OS surface, which ignores the page's
+   tokens on some platforms; pin them so a dark select is not white inside. */
+[data-clinician-theme='dark'] .doctor-shell option,
+[data-clinician-theme='dark'] .doctor-login option {
+  background: #16272a;
+  color: #e8efee;
+}
+
+/* Theme toggle -------------------------------------------------------------- */
+
+.clinician-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper-raised);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.clinician-theme-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.clinician-theme-toggle svg {
+  display: block;
+}
+
+/* Re-anchor inherited text inside the clinician scope.
+   The dark tokens above are redefined on .doctor-shell / .doctor-login, but
+   `body { color: var(--color-ink) }` in global.css resolves at the body, where
+   only the light palette exists. Anything inside that does not set its own
+   colour therefore inherits light-mode ink (#111c1e) straight onto a dark
+   panel — roughly 1.1:1. Rules that spell out `color: var(--color-ink)` looked
+   fine, which is why this read as a handful of unrelated "too dark" spots
+   (the questionnaire values, mostly) rather than one bug. Restating the colour
+   at the scope root re-resolves the token, so inheritance is correct by
+   default in both themes and new markup cannot fall back into it.
+   Switching surface mid-shift is jarring if it snaps, so the transition stays
+   here too — kept short, and dropped for anyone who has asked for less motion. */
+.doctor-shell,
+.doctor-login {
+  color: var(--color-ink);
+  transition: background-color var(--duration-normal) var(--ease-smooth),
+    color var(--duration-normal) var(--ease-smooth);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doctor-shell,
+  .doctor-login {
+    transition: none;
+  }
+}

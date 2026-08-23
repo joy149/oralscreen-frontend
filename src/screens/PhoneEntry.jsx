@@ -6,7 +6,7 @@ import PageTransition from '../components/shared/PageTransition';
 import OtpInput from '../components/shared/OtpInput';
 import { api, ApiError, DEFAULT_SEX_OPTIONS } from '../api/client';
 import { usePatient } from '../context/PatientContext';
-import { ShieldCheck, Stethoscope, Clock, Sparkles, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, Stethoscope, Clock, ArrowLeft } from 'lucide-react';
 import PrivacyPolicyModal from '../components/shared/PrivacyPolicyModal';
 import {
   warmRecaptcha,
@@ -146,7 +146,7 @@ export default function PhoneEntry() {
         // patient, as likely to be checking a result as starting a screening. Home offers
         // both; a first-time registration (handleDetailsSubmit) still goes straight to the
         // questionnaire, where home would only show them an empty history.
-        navigate('/');
+        navigate('/home');
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
           setStage('details');
@@ -198,7 +198,7 @@ export default function PhoneEntry() {
   }
 
   return (
-    <AppShell clinicianLink>
+    <AppShell clinicianLink width="read">
       <PageTransition>
         <div className="screen phone-entry">
           {/* No reCAPTCHA container here on purpose: it is created on <body> by
@@ -208,14 +208,30 @@ export default function PhoneEntry() {
               all traffic is patients, so the staff entrance no longer occupies
               the most valuable element on the screen — it's a footer link now
               (see AppShell's clinicianLink). */}
-          <div className="phone-entry__intro">
-            <div className="phone-entry__hero-badge">
-              <Sparkles size={14} className="phone-entry__hero-icon" />
-              <span>Clinical AI Screening</span>
-            </div>
+          <div className="phone-entry__aside">
+            <p className="phone-entry__eyebrow">Clinical AI Screening</p>
             <h1>Let's take a look</h1>
-            <p>Answer a few questions and share a photo. A licensed dentist reviews every result.</p>
-            
+            <p className="phone-entry__lede">
+              Answer a few questions and share a photo. A licensed dentist reviews every result.
+            </p>
+
+            {/* Echoes the landing page's three steps, so arriving here reads as the next
+                move in the same flow rather than a separate sign-in product. */}
+            <ol className="phone-entry__steps">
+              <li>
+                <span className="phone-entry__step-n">01</span>
+                <span><strong>Symptoms &amp; habits</strong>Six quick questions.</span>
+              </li>
+              <li>
+                <span className="phone-entry__step-n">02</span>
+                <span><strong>Four guided photos</strong>An oval shows you where to aim.</span>
+              </li>
+              <li>
+                <span className="phone-entry__step-n">03</span>
+                <span><strong>A dentist reviews it</strong>Usually within 24 hours.</span>
+              </li>
+            </ol>
+
             <div className="phone-entry__trust-badges">
               <div className="phone-entry__trust-item">
                 <ShieldCheck size={15} />
@@ -231,6 +247,8 @@ export default function PhoneEntry() {
               </div>
             </div>
           </div>
+
+          <div className="phone-entry__panel">
 
           {stage === 'phone' && sessionExpired && (
             <p className="phone-entry__session-notice" role="status">
@@ -378,6 +396,8 @@ export default function PhoneEntry() {
               </button>
             </form>
           )}
+          </div>
+
           <PrivacyPolicyModal
             isOpen={showPrivacyModal}
             onClose={() => setShowPrivacyModal(false)}

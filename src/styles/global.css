@@ -93,12 +93,15 @@ a {
   flex-direction: column;
 }
 
+/* The content tier and the gutter both come from the shell, so a screen lines up with the
+   header above it without either rule knowing the other's number. The fallbacks are for
+   the handful of tests that mount a screen with no AppShell around it. */
 .screen {
   flex: 1;
-  max-width: var(--max-width);
+  max-width: var(--shell-wrap, var(--wrap-task));
   margin: 0 auto;
   width: 100%;
-  padding: var(--space-5) var(--space-4);
+  padding: var(--space-5) var(--shell-gutter, var(--space-4));
   /* index.html opts into viewport-fit=cover, so the bottom inset must be paid
      back here or the last control sits under the iOS home indicator. */
   padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
@@ -136,7 +139,7 @@ a {
   border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-5);
   min-height: 44px;
-  font-weight: 600;
+  font-weight: var(--weight-label);
   transition: transform 160ms var(--ease-out),
     background-color 160ms var(--ease-out),
     opacity 160ms var(--ease-out),
@@ -148,9 +151,11 @@ a {
   transform: scale(0.97);
 }
 
+/* The label colour is a token because --color-primary is remapped in the clinician
+   dark theme, where it lifts to a light teal that white text cannot sit on. */
 .btn-primary {
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-on-primary, #ffffff);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -184,7 +189,7 @@ a {
 
 .field label {
   display: block;
-  font-weight: 600;
+  font-weight: var(--weight-label);
   font-size: 0.875rem;
   color: var(--color-ink-soft);
   margin-bottom: var(--space-2);
@@ -297,6 +302,45 @@ a {
 
 .switch input:checked ~ .thumb {
   transform: translateX(20px);
+}
+
+/* Chart-note label -------------------------------------------------------
+   The landing page opens every section with one of these, so the product screens use
+   the same device: a patient who arrives from the marketing page meets one system, not
+   two. It is also the right register for the thing it usually labels here — a group of
+   clinical fields, a fact in a record — which is why it reads as annotation rather than
+   as a heading competing with the screen's own. */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.section-label::before {
+  content: '';
+  width: 18px;
+  height: 1px;
+  background: var(--color-line-strong);
+  flex: none;
+}
+
+/* Without the rule, for labels sitting inside a card or a definition list where the
+   extra mark would be noise. */
+.section-label--bare { gap: 0; }
+.section-label--bare::before { display: none; }
+
+/* Anything a patient compares across screenings — dates, counts, case ids. Tabular
+   figures so a column of them lines up instead of shimmering. */
+.data-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 .error-text {

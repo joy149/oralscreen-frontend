@@ -255,6 +255,69 @@ describe('adminRequest', () => {
   });
 });
 
+describe('getAdminCosts', () => {
+  /** The URL the call actually requested. */
+  function requestedUrl(fetchMock) {
+    return fetchMock.mock.calls[0][0];
+  }
+
+  it('sends every supplied parameter and the admin key', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ rows: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await api.getAdminCosts('secret', {
+      from: '2026-08-01T00:00:00Z',
+      to: '2026-08-20T23:59:59Z',
+      page: 2,
+      size: 100,
+    });
+
+    expect(requestedUrl(fetchMock)).toBe(
+      '/api/admin/costs?from=2026-08-01T00%3A00%3A00Z&to=2026-08-20T23%3A59%3A59Z&page=2&size=100'
+    );
+    expect(sentHeaders(fetchMock)['X-Admin-Key']).toBe('secret');
+  });
+
+  // An empty `from=` is not the same as no `from` — the first is a value the server has to
+  // parse, the second is what lets it apply its own default window.
+  it('omits absent bounds rather than sending them empty', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ rows: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await api.getAdminCosts('secret', { page: 0, size: 50 });
+
+    expect(requestedUrl(fetchMock)).toBe('/api/admin/costs?page=0&size=50');
+  });
+
+  it('sends page 0 rather than dropping it as falsy', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ rows: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await api.getAdminCosts('secret', { page: 0 });
+
+    expect(requestedUrl(fetchMock)).toBe('/api/admin/costs?page=0');
+  });
+
+  it('requests the bare endpoint when given no options at all', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ rows: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await api.getAdminCosts('secret');
+
+    expect(requestedUrl(fetchMock)).toBe('/api/admin/costs');
+  });
+
+  it('refuses to call without a key', () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    expect(() => api.getAdminCosts('')).toThrowError(
+      expect.objectContaining({ name: 'ApiError', status: 401 })
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
 describe('getSexOptions', () => {
   it('maps a string array into value/label pairs', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(['Male', 'Female'])));

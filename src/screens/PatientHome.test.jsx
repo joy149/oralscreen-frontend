@@ -29,9 +29,10 @@ vi.mock('../hooks/useSessionRecovery', () => ({ default: () => handleAuthError }
 function renderHome() {
   const user = userEvent.setup();
   render(
-    <MemoryRouter initialEntries={['/']} future={routerFuture}>
+    <MemoryRouter initialEntries={['/home']} future={routerFuture}>
       <Routes>
-        <Route path="/" element={<PatientHome />} />
+        <Route path="/home" element={<PatientHome />} />
+        <Route path="/start" element={<p>Sign in screen</p>} />
       </Routes>
     </MemoryRouter>
   );
@@ -68,6 +69,35 @@ const unreviewed = (id, secondsAgo) => ({
   id,
   createdAt: ago(secondsAgo),
   aiRiskClassification: 'HIGH_RISK',
+});
+
+// Submitted, but the AI read has not come back yet. A real state: `AssessmentPending`
+// handles exactly this, and it is what puts the rail on its third stage rather than
+// its fourth.
+const preAi = (id, secondsAgo) => ({ id, createdAt: ago(secondsAgo) });
+
+/**
+ * This screen used to be the signed-in half of `/`, so it carried no guard: the route
+ * chose between it and the public landing page on exactly this condition, and redirecting
+ * would have looped. It lives at `/home` now, and guards like every other patient screen.
+ */
+describe('access', () => {
+  it('redirects a signed-out visitor to sign-in', () => {
+    patient = null;
+
+    renderHome();
+
+    expect(screen.getByText('Sign in screen')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /start a new screening/i })).not.toBeInTheDocument();
+  });
+
+  it('does not call the assessments endpoint without a patient', () => {
+    patient = null;
+
+    renderHome();
+
+    expect(apiMock.getPatientAssessments).not.toHaveBeenCalled();
+  });
 });
 
 describe('starting a screening', () => {
@@ -114,7 +144,25 @@ describe('greeting', () => {
   });
 });
 
-describe('awaiting review', () => {
+/**
+ * The progress rail. It replaced a single amber card that said "with your dentist now" and
+ * looked identical an hour after submitting and a week after submitting.
+ *
+ * <p>The stage states are derived, not fetched — no endpoint reports them. An assessment
+ * record cannot exist before the answers and photos are in, because `PhotoUpload` is what
+ * creates it, so the first two stages are complete whenever there is a record at all. The
+ * last two read the two fields the list response already carries.
+ */
+describe('the screening rail', () => {
+  function railStages() {
+    return [...document.querySelectorAll('.patient-home__stage')].map((el) => ({
+      label: el.querySelector('.patient-home__stage-label').textContent,
+      when: el.querySelector('.patient-home__stage-when').textContent,
+      done: el.classList.contains('is-done'),
+      current: el.classList.contains('is-current'),
+    }));
+  }
+
   it('surfaces the newest unreviewed screening regardless of payload order', async () => {
     apiMock.getPatientAssessments.mockResolvedValue([
       unreviewed('old', 60 * 60 * 24 * 3),
@@ -123,11 +171,67 @@ describe('awaiting review', () => {
     ]);
     const { user } = renderHome();
 
-    const card = await screen.findByRole('button', { name: /with your dentist now/i });
-    expect(within(card).getByText(/submitted 30m ago/i)).toBeInTheDocument();
+    const rail = await screen.findByRole('region', { name: /progress of your latest screening/i });
+    expect(within(rail).getByRole('heading', { name: /your screening from 30m ago/i })).toBeInTheDocument();
 
-    await user.click(card);
+    await user.click(within(rail).getByRole('button', { name: /open/i }));
     expect(navigate).toHaveBeenCalledWith('/assessments/newest');
+  });
+
+  it('walks the four stages in order', async () => {
+    apiMock.getPatientAssessments.mockResolvedValue([unreviewed('a1', 60 * 30)]);
+    renderHome();
+    await screen.findByRole('region', { name: /progress of your latest screening/i });
+
+    expect(railStages().map((s) => s.label)).toEqual([
+      'Answers received',
+      'Photos processed',
+      'Initial AI assessment',
+      'Dentist review',
+    ]);
+  });
+
+  it('stops on the dentist once the AI read is back', async () => {
+    apiMock.getPatientAssessments.mockResolvedValue([unreviewed('a1', 60 * 30)]);
+    renderHome();
+    await screen.findByRole('region', { name: /progress of your latest screening/i });
+
+    const stages = railStages();
+    expect(stages.map((s) => s.done)).toEqual([true, true, true, false]);
+    expect(stages[3].current).toBe(true);
+    expect(stages[3].when).toBe('In progress');
+  });
+
+  it('stops on the AI read while it is still running', async () => {
+    apiMock.getPatientAssessments.mockResolvedValue([preAi('a1', 60 * 30)]);
+    renderHome();
+    await screen.findByRole('region', { name: /progress of your latest screening/i });
+
+    const stages = railStages();
+    expect(stages.map((s) => s.done)).toEqual([true, true, false, false]);
+    expect(stages[2].current).toBe(true);
+    expect(stages[3].when).toBe('Not started');
+  });
+
+  /**
+   * Only `createdAt` and `doctorReviewedAt` exist. The two middle stages report their state
+   * in words rather than inventing a time for themselves — that is the one thing here that
+   * would want a backend change, and this asserts we did not fake it in the meantime.
+   */
+  it('shows a real time only where the record carries one', async () => {
+    apiMock.getPatientAssessments.mockResolvedValue([unreviewed('a1', 60 * 30)]);
+    renderHome();
+    await screen.findByRole('region', { name: /progress of your latest screening/i });
+
+    expect(railStages().map((s) => s.when)).toEqual(['30m ago', 'Done', 'Done', 'In progress']);
+  });
+
+  it('makes no promise about when the dentist will get to it', async () => {
+    apiMock.getPatientAssessments.mockResolvedValue([unreviewed('a1', 60 * 30)]);
+    renderHome();
+    const rail = await screen.findByRole('region', { name: /progress of your latest screening/i });
+
+    expect(rail.textContent).not.toMatch(/hour|day|soon|shortly|within/i);
   });
 
   it('stays hidden when every screening has been reviewed', async () => {
@@ -135,7 +239,7 @@ describe('awaiting review', () => {
     renderHome();
 
     await screen.findByText(/reviewed by doctor/i);
-    expect(screen.queryByText(/with your dentist now/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: /progress of your latest screening/i })).not.toBeInTheDocument();
   });
 });
 

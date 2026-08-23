@@ -32,7 +32,7 @@ function renderList() {
     <MemoryRouter initialEntries={['/assessments']} future={routerFuture}>
       <Routes>
         <Route path="/assessments" element={<PastAssessments />} />
-        <Route path="/" element={<p>Sign in screen</p>} />
+        <Route path="/start" element={<p>Sign in screen</p>} />
       </Routes>
     </MemoryRouter>
   );
@@ -68,13 +68,16 @@ describe('access', () => {
 
   // History-back was actively wrong here: arriving from a result detail — which itself
   // backs out to this list — made "back" return to the screen just left.
-  it('sends the back control to the landing screen', async () => {
+  // `/home`, not `/`. This screen only renders for a signed-in patient, and `/` is the
+  // public landing page for them too now — backing out of your own history onto a page
+  // pitching you the product is the regression this catches.
+  it('sends the back control to the patient home, not the landing page', async () => {
     apiMock.getPatientAssessments.mockResolvedValue([]);
     const { user } = renderList();
 
     await user.click(screen.getByRole('button', { name: 'Go back' }));
 
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(navigate).toHaveBeenCalledWith('/home');
   });
 });
 

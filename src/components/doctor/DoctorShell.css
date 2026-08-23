@@ -15,35 +15,15 @@
   gap: var(--space-4);
 }
 
-.doctor-shell__theme-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  border: 1px solid var(--color-line) !important;
-  background: var(--color-paper) !important;
-  color: var(--color-ink) !important;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.doctor-shell__theme-btn:hover {
-  background: var(--color-primary-soft) !important;
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
 
 .doctor-shell__brand {
   border: 0;
   padding: 0;
   background: transparent;
-  color: var(--color-primary-dark);
+  color: var(--color-ink);
   font-family: var(--font-display);
   font-size: 1.15rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -60,9 +40,10 @@
 .doctor-shell__brand span {
   margin-left: var(--space-2);
   color: var(--color-ink-faint);
-  font-family: var(--font-body);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -74,14 +55,19 @@
   font-size: 0.875rem;
 }
 
-.doctor-shell__account button {
+/* Scoped to the sign-out control specifically: as `.doctor-shell__account button` it
+   also caught the theme toggle, whose own class is a weaker selector than a descendant
+   one and lost. */
+.doctor-shell__signout {
   border: 0;
   background: transparent;
   padding: var(--space-2);
-  color: var(--color-primary-dark);
+  color: var(--color-primary);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--weight-label);
 }
+
+.doctor-shell__signout:hover { color: var(--color-primary-dark); }
 
 .doctor-shell__main {
   width: min(1180px, 100%);

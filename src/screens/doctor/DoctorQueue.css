@@ -9,7 +9,7 @@
   margin-bottom: var(--space-1);
   color: var(--color-primary);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -49,7 +49,7 @@
   background: var(--color-paper-raised);
   color: var(--color-ink-soft);
   font-size: 0.825rem;
-  font-weight: 600;
+  font-weight: var(--weight-label);
   line-height: 1.2;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
@@ -68,14 +68,14 @@
   flex-shrink: 0;
   background: var(--color-line);
 }
-.doctor-queue__pill-dot--HIGH_RISK { background: #C1503F; }
-.doctor-queue__pill-dot--MODERATE_RISK { background: #C98A2E; }
-.doctor-queue__pill-dot--NO_MILD_RISK { background: #5C8F6E; }
+.doctor-queue__pill-dot--HIGH_RISK { background: var(--color-risk-high); }
+.doctor-queue__pill-dot--MODERATE_RISK { background: var(--color-risk-moderate); }
+.doctor-queue__pill-dot--NO_MILD_RISK { background: var(--color-risk-mild); }
 
 .doctor-queue__pill-count {
   padding: 0 5px;
   border-radius: 3px;
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--color-paper-sunken);
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
 }
@@ -90,7 +90,7 @@
   background: none;
   color: var(--color-ink-faint);
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: var(--weight-label);
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
@@ -123,19 +123,19 @@
 
 .doctor-queue__row--header {
   min-height: 38px;
-  background: #f8faf9;
+  background: var(--color-paper-sunken);
   color: var(--color-ink-faint);
 }
 .doctor-queue__row--header > span:first-child { grid-column: 2; } /* skip the edge track */
 .doctor-queue__row--header [role='columnheader'] {
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 .doctor-queue__row--header > span:not([role='columnheader']):not(.doctor-queue__col--submitted):not(.doctor-queue__col--risk) {
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: var(--weight-heading);
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
@@ -172,7 +172,7 @@
   transition: background 0.15s ease;
 }
 .doctor-queue__row--case:last-child { border-bottom: 0; }
-.doctor-queue__row--case:hover { background: #f6faf9; }
+.doctor-queue__row--case:hover { background: var(--color-paper-sunken); }
 .doctor-queue__row--case:hover .doctor-queue__arrow { color: var(--color-primary); }
 
 /* Risk-edge indicator — lets a doctor triage by color down the left rail
@@ -187,9 +187,9 @@
   border-radius: 2px;
   background: var(--color-line);
 }
-.doctor-queue__row--case[data-risk='HIGH_RISK']::before { background: #C1503F; }
-.doctor-queue__row--case[data-risk='MODERATE_RISK']::before { background: #C98A2E; }
-.doctor-queue__row--case[data-risk='NO_MILD_RISK']::before { background: #5C8F6E; }
+.doctor-queue__row--case[data-risk='HIGH_RISK']::before { background: var(--color-risk-high); }
+.doctor-queue__row--case[data-risk='MODERATE_RISK']::before { background: var(--color-risk-moderate); }
+.doctor-queue__row--case[data-risk='NO_MILD_RISK']::before { background: var(--color-risk-mild); }
 
 .doctor-queue__patient { grid-column: 2; }
 .doctor-queue__patient strong,
@@ -210,7 +210,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-weight: 600;
+  font-weight: var(--weight-label);
   font-size: 0.82rem;
 }
 .doctor-queue__row .is-reviewed { color: var(--color-ink-soft); }
@@ -223,7 +223,7 @@
   flex-shrink: 0;
 }
 .is-reviewed .status-dot { background: var(--color-success); }
-.is-awaiting .status-dot { background: #C98A2E; }
+.is-awaiting .status-dot { background: var(--color-risk-moderate); }
 
 .doctor-queue__arrow {
   color: var(--color-ink-faint);

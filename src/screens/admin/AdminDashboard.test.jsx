@@ -40,6 +40,28 @@ const DOCTORS = [
   { id: 'd2', name: 'Bala', registrationId: 'MCI-9999' },
 ];
 
+/** Enough of a cost payload to keep the panel out of its error state. */
+const COSTS = {
+  summary: {
+    totalCostUsd: 1.2,
+    averageCostPerAssessmentUsd: 0.03,
+    assessmentsWithKnownCost: 40,
+    totalAssessments: 50,
+    totalInputTokens: 480000,
+    totalOutputTokens: 32000,
+    totalProviderCalls: 54,
+    unsuccessfulProviderCalls: 4,
+    wastedCostUsd: 0.01,
+  },
+  rows: [],
+  page: 0,
+  size: 50,
+  totalRows: 0,
+  totalPages: 0,
+  from: '2026-08-01T00:00:00Z',
+  to: '2026-08-20T12:00:00Z',
+};
+
 const METRICS = {
   dailyVolume: [
     { date: '2026-08-03', count: 4 },
@@ -79,6 +101,7 @@ beforeEach(() => {
   navigate.mockReset();
   apiMock.getPendingDoctors.mockResolvedValue(DOCTORS);
   apiMock.getAdminMetrics.mockResolvedValue(METRICS);
+  apiMock.getAdminCosts.mockResolvedValue(COSTS);
   apiMock.approveDoctor.mockResolvedValue({});
 });
 
@@ -280,6 +303,9 @@ describe('the pending doctor list', () => {
 
   it('shows a skeleton while loading', () => {
     apiMock.getPendingDoctors.mockReturnValue(new Promise(() => {}));
+    // Held pending too: this test asserts synchronously, so a cost report that resolved
+    // mid-assertion would update the panel outside act().
+    apiMock.getAdminCosts.mockReturnValue(new Promise(() => {}));
 
     renderUnlocked();
 
@@ -371,6 +397,61 @@ describe('approving a doctor', () => {
     await user.click(screen.getByRole('button', { name: 'Approve No Id' }));
 
     expect(apiMock.approveDoctor).not.toHaveBeenCalled();
+  });
+});
+
+describe('the cost panel', () => {
+  it('loads costs with the same key, alongside the approval queue', async () => {
+    renderUnlocked();
+
+    expect(await screen.findByRole('heading', { name: 'Cost per assessment' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(apiMock.getAdminCosts).toHaveBeenCalledWith(
+        'secret-key',
+        expect.objectContaining({ page: 0 })
+      )
+    );
+  });
+
+  it('reveals no costs before a key is supplied', () => {
+    renderAdmin();
+
+    expect(apiMock.getAdminCosts).not.toHaveBeenCalled();
+  });
+
+  it('still shows the approval queue when the cost report is down', async () => {
+    apiMock.getAdminCosts.mockRejectedValue(new ApiError('boom', 500, null));
+
+    renderUnlocked();
+
+    expect(await screen.findByRole('heading', { name: 'Dr Asha Rao' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Could not load the cost report' })
+    ).toBeInTheDocument();
+  });
+
+  // The costs call can be the first to notice a revoked key; the console must lock rather
+  // than leave the doctor queue on screen implying the key still works.
+  it.each([401, 403])('locks the whole console when costs are rejected with %i', async (status) => {
+    apiMock.getAdminCosts.mockRejectedValue(new ApiError('That key was rejected.', status, null));
+
+    renderUnlocked();
+
+    expect(await screen.findByRole('heading', { name: 'Admin key required' })).toBeInTheDocument();
+    expect(screen.getByText('That key was rejected.')).toBeInTheDocument();
+    expect(sessionStorage.getItem(KEY_STORAGE)).toBeNull();
+  });
+
+  it('does not re-fetch costs on every parent render', async () => {
+    const { user } = renderUnlocked();
+    await screen.findByRole('heading', { name: 'Dr Asha Rao' });
+
+    // Approving re-renders AdminDashboard. The rejection callback handed to the panel is
+    // memoised, so that render must not restart the panel's load effect.
+    await user.click(screen.getByRole('button', { name: 'Approve Dr Asha Rao' }));
+    await waitFor(() => expect(apiMock.approveDoctor).toHaveBeenCalled());
+
+    expect(apiMock.getAdminCosts).toHaveBeenCalledTimes(1);
   });
 });
 
